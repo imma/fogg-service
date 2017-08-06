@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+function _fogg_service_profile {
+  local shome="${_fogg_service_home:="$(cd -P -- "$(dirname -- "$BASH_SOURCE")/.." && pwd -P)"}"
+  PATH="$shome/bin:$shome/exec:$PATH"
+  #export ANSIBLE_ROLES_PATH="$shome/roles${ANSIBLE_ROLES_PATH:+:${ANSIBLE_ROLES_PATH}}"
+  #export ANSIBLE_LIBRARY="$shome/library${ANSIBLE_LIBRARY:+:${ANSIBLE_LIBRARY}}"
+
+  FOGG_SERVICE_VERSION='0.0.1'
+}
+
+_fogg_service_profile
