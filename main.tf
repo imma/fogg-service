@@ -82,6 +82,8 @@ resource "aws_subnet" "service" {
   cidr_block              = "${cidrsubnet(data.aws_vpc.current.cidr_block,var.service_bits,element(concat(split(" ",lookup(data.terraform_remote_state.org.org,"service_${data.terraform_remote_state.app.app_name}_${var.service_name}","")),split(" ",lookup(data.terraform_remote_state.org.org,"service_${var.service_name}",""))),count.index))}"
   map_public_ip_on_launch = "${signum(var.public_network) == 1 ? "true" : "false"}"
 
+  assign_ipv6_address_on_creation = "${var.want_ipv6 == "1" ? "true" : "false"}"
+
   count = "${var.az_count}"
 
   lifecycle {
