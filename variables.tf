@@ -23,7 +23,7 @@ variable "want_efs" {
 }
 
 variable "want_nat" {
-  default = "1"
+  default = "0"
 }
 
 variable "want_ipv6" {
