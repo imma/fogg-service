@@ -165,3 +165,11 @@ output "route_tables" {
 output "region" {
   value = "${var.env_region}"
 }
+
+output "role" {
+  value = "${aws_iam_role.service.arn}"
+}
+
+output "group" {
+  value = "${aws_iam_group.service.arn}"
+}
