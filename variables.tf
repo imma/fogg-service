@@ -23,7 +23,7 @@ variable "want_efs" {
 }
 
 variable "want_nat" {
-  default = "1"
+  default = "0"
 }
 
 variable "want_ipv6" {
@@ -131,7 +131,7 @@ output "service_sg" {
 }
 
 output "service_subnets" {
-  value = ["${aws_subnet.service.*.id}"]
+  value = ["${concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id)}"]
 }
 
 output "key_name" {
