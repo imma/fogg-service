@@ -506,7 +506,7 @@ resource "aws_security_group_rule" "lb_to_service" {
 resource "aws_elb" "service" {
   name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count   = "${var.want_elb*var.asg_count}"
-  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",g(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets)))))}"]
+  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets)))))}"]
 
   security_groups = [
     "${data.terraform_remote_state.env.sg_env_lb}",
@@ -567,7 +567,7 @@ data "aws_acm_certificate" "service" {
 resource "aws_alb" "service" {
   name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count   = "${var.want_alb*var.asg_count}"
-  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",g(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets)))))}"]
+  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets)))))}"]
 
   security_groups = [
     "${data.terraform_remote_state.env.sg_env_lb}",
@@ -763,14 +763,14 @@ resource "aws_ecs_cluster" "service" {
 resource "aws_autoscaling_group" "service" {
   name                 = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   launch_configuration = "${element(aws_launch_configuration.service.*.name,count.index)}"
-  vpc_zone_identifier  = ["${g(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets)))}"]
+  vpc_zone_identifier  = ["${compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets)))}"]
   min_size             = "${element(var.min_size,count.index)}"
   max_size             = "${element(var.max_size,count.index)}"
   termination_policies = ["${var.termination_policies}"]
   count                = "${var.asg_count}"
 
-  load_balancers    = ["${g(list(element(concat(aws_elb.service.*.name,list("","")),count.index)))}"]
-  target_group_arns = ["${g(list(element(concat(aws_alb_target_group.service.*.arn,list("","")),count.index)))}"]
+  load_balancers    = ["${compact(list(element(concat(aws_elb.service.*.name,list("","")),count.index)))}"]
+  target_group_arns = ["${compact(list(element(concat(aws_alb_target_group.service.*.arn,list("","")),count.index)))}"]
 
   tag {
     key                 = "Name"
