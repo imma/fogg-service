@@ -82,7 +82,7 @@ resource "aws_subnet" "service" {
   cidr_block              = "${cidrsubnet(data.aws_vpc.current.cidr_block,var.service_bits,element(concat(split(" ",lookup(data.terraform_remote_state.org.org,"service_${data.terraform_remote_state.app.app_name}_${var.service_name}","")),split(" ",lookup(data.terraform_remote_state.org.org,"service_${var.service_name}",""))),count.index))}"
   map_public_ip_on_launch = "${signum(var.public_network) == 1 ? "true" : "false"}"
 
-  count = "${var.az_count*(var.want_ipv6 - 1)*-1}"
+  count = "${var.want_subnets*var.az_count*(var.want_ipv6 - 1)*-1}"
 
   lifecycle {
     create_before_destroy = true
@@ -108,7 +108,7 @@ resource "aws_subnet" "service_v6" {
   ipv6_cidr_block                 = "${cidrsubnet(data.aws_vpc.current.ipv6_cidr_block,8,element(concat(split(" ",lookup(data.terraform_remote_state.org.org,"service_v6_${data.terraform_remote_state.app.app_name}_${var.service_name}","")),split(" ",lookup(data.terraform_remote_state.org.org,"service_v6_${var.service_name}",""))),count.index))}"
   assign_ipv6_address_on_creation = true
 
-  count = "${var.az_count*var.want_ipv6}"
+  count = "${var.want_subnets*var.az_count*var.want_ipv6}"
 
   lifecycle {
     create_before_destroy = true
@@ -125,7 +125,7 @@ resource "aws_subnet" "service_v6" {
 
 resource "aws_route_table" "service" {
   vpc_id = "${data.aws_vpc.current.id}"
-  count  = "${var.az_count*(signum(var.public_network)-1)*-1}"
+  count  = "${var.want_subnets*var.az_count*(signum(var.public_network)-1)*-1}"
 
   tags {
     "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
@@ -140,31 +140,31 @@ resource "aws_route" "service" {
   route_table_id         = "${element(aws_route_table.service.*.id,count.index)}"
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = "${element(data.terraform_remote_state.env.nat_gateways,count.index)}"
-  count                  = "${var.want_nat*var.az_count*(signum(var.public_network)-1)*-1}"
+  count                  = "${var.want_subnets*var.want_nat*var.az_count*(signum(var.public_network)-1)*-1}"
 }
 
 resource "aws_route" "service_v6" {
   route_table_id              = "${element(aws_route_table.service.*.id,count.index)}"
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = "${data.terraform_remote_state.env.egw_gateway}"
-  count                       = "${var.az_count*(signum(var.public_network)-1)*-1}"
+  count                       = "${var.want_subnets*var.az_count*(signum(var.public_network)-1)*-1}"
 }
 
 resource "aws_route_table_association" "service" {
   subnet_id      = "${element(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id),count.index)}"
   route_table_id = "${element(aws_route_table.service.*.id,count.index)}"
-  count          = "${var.az_count*(signum(var.public_network)-1)*-1}"
+  count          = "${var.want_subnets*var.az_count*(signum(var.public_network)-1)*-1}"
 }
 
 resource "aws_vpc_endpoint_route_table_association" "s3_service" {
   vpc_endpoint_id = "${data.terraform_remote_state.env.s3_endpoint_id}"
   route_table_id  = "${element(aws_route_table.service.*.id,count.index)}"
-  count           = "${var.az_count*(signum(var.public_network)-1)*-1}"
+  count           = "${var.want_subnets*var.az_count*(signum(var.public_network)-1)*-1}"
 }
 
 resource "aws_route_table" "service_public" {
   vpc_id = "${data.aws_vpc.current.id}"
-  count  = "${var.az_count*signum(var.public_network)}"
+  count  = "${var.want_subnets*var.az_count*signum(var.public_network)}"
 
   tags {
     "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
@@ -180,26 +180,26 @@ resource "aws_route" "service_public" {
   route_table_id         = "${element(aws_route_table.service_public.*.id,count.index)}"
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = "${data.terraform_remote_state.env.igw_id}"
-  count                  = "${var.az_count*signum(var.public_network)}"
+  count                  = "${var.want_subnets*var.az_count*signum(var.public_network)}"
 }
 
 resource "aws_route" "service_public_v6" {
   route_table_id              = "${element(aws_route_table.service_public.*.id,count.index)}"
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = "${data.terraform_remote_state.env.egw_gateway}"
-  count                       = "${var.az_count*signum(var.public_network)}"
+  count                       = "${var.want_subnets*var.az_count*signum(var.public_network)}"
 }
 
 resource "aws_route_table_association" "service_public" {
   subnet_id      = "${element(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id),count.index)}"
   route_table_id = "${element(aws_route_table.service_public.*.id,count.index)}"
-  count          = "${var.az_count*signum(var.public_network)}"
+  count          = "${var.want_subnets*var.az_count*signum(var.public_network)}"
 }
 
 resource "aws_vpc_endpoint_route_table_association" "s3_service_public" {
   vpc_endpoint_id = "${data.terraform_remote_state.env.s3_endpoint_id}"
   route_table_id  = "${element(aws_route_table.service_public.*.id,count.index)}"
-  count           = "${var.az_count*signum(var.public_network)}"
+  count           = "${var.want_subnets*var.az_count*signum(var.public_network)}"
 }
 
 data "aws_iam_policy_document" "service" {
@@ -345,7 +345,7 @@ resource "aws_instance" "service" {
   iam_instance_profile = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
 
   vpc_security_group_ids      = ["${concat(list(data.terraform_remote_state.env.sg_env,signum(var.public_network) == 1 ?  data.terraform_remote_state.env.sg_env_public : data.terraform_remote_state.env.sg_env_private,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
-  subnet_id                   = "${element(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id),count.index)}"
+  subnet_id                   = "${element(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_networks : data.terraform_remote_state.env.common_networks),count.index)}"
   associate_public_ip_address = "${var.public_network ? "true" : "false"}"
 
   count = "${var.instance_count}"
@@ -502,7 +502,7 @@ resource "aws_security_group_rule" "lb_to_service" {
 resource "aws_elb" "service" {
   name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count   = "${var.want_elb*var.asg_count}"
-  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id)))}"]
+  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_networks : data.terraform_remote_state.env.common_networks)))}"]
 
   security_groups = [
     "${data.terraform_remote_state.env.sg_env_lb}",
@@ -563,7 +563,7 @@ data "aws_acm_certificate" "service" {
 resource "aws_alb" "service" {
   name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count   = "${var.want_alb*var.asg_count}"
-  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id)))}"]
+  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_networks : data.terraform_remote_state.env.common_networks)))}"]
 
   security_groups = [
     "${data.terraform_remote_state.env.sg_env_lb}",
@@ -759,7 +759,7 @@ resource "aws_ecs_cluster" "service" {
 resource "aws_autoscaling_group" "service" {
   name                 = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   launch_configuration = "${element(aws_launch_configuration.service.*.name,count.index)}"
-  vpc_zone_identifier  = ["${concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id)}"]
+  vpc_zone_identifier  = ["${concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_networks : data.terraform_remote_state.env.common_networks)}"]
   min_size             = "${element(var.min_size,count.index)}"
   max_size             = "${element(var.max_size,count.index)}"
   termination_policies = ["${var.termination_policies}"]
@@ -827,7 +827,7 @@ module "efs" {
   efs_name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
   vpc_id   = "${data.terraform_remote_state.env.vpc_id}"
   env_name = "${data.terraform_remote_state.env.env_name}"
-  subnets  = ["${concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id)}"]
+  subnets  = ["${concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_networks : data.terraform_remote_state.env.common_networks)}"]
   az_count = "${var.az_count}"
   want_efs = "${var.want_efs}"
 }

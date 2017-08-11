@@ -38,6 +38,10 @@ variable "want_alb" {
   default = "0"
 }
 
+variable "want_subnets" {
+  default = "1"
+}
+
 variable "user_data" {
   default = "module/init/user-data.template"
 }
