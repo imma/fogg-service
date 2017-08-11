@@ -46,6 +46,10 @@ variable "service_bits" {
   default = "12"
 }
 
+variable "instance_count" {
+  default = 0
+}
+
 variable "asg_count" {
   default = 1
 }
@@ -172,8 +176,4 @@ output "role" {
 
 output "group" {
   value = "${aws_iam_group.service.arn}"
-}
-
-output "instance_count" {
-  value = 0
 }

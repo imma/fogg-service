@@ -345,7 +345,7 @@ resource "aws_instance" "service" {
   iam_instance_profile = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
 
   vpc_security_group_ids      = ["${concat(list(data.terraform_remote_state.env.sg_env,signum(var.public_network) == 1 ?  data.terraform_remote_state.env.sg_env_public : data.terraform_remote_state.env.sg_env_private,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
-  subnet_id                   = "${element(var.subnets,count.index)}"
+  subnet_id                   = ["${element(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id),count.index)}"]
   associate_public_ip_address = "${var.public_network ? "true" : "false"}"
 
   count = "${var.instance_count}"
