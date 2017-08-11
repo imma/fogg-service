@@ -38,9 +38,7 @@ variable "want_alb" {
   default = "0"
 }
 
-variable "user_data" {
-  default = "../../../.etc/user-data.template"
-}
+variable "user_data" {}
 
 variable "service_bits" {
   default = "12"
