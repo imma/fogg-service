@@ -173,3 +173,7 @@ output "role" {
 output "group" {
   value = "${aws_iam_group.service.arn}"
 }
+
+output "instance_count" {
+  value = 0
+}

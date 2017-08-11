@@ -336,6 +336,66 @@ data "aws_ami" "block" {
   owners = ["self"]
 }
 
+resource "aws_instance" "service" {
+  ami           = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
+  instance_type = "${element(var.instance_type,count.index)}"
+
+  key_name             = "${data.terraform_remote_state.env.key_name}"
+  user_data            = "${data.template_file.user_data_service.rendered}"
+  iam_instance_profile = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+
+  vpc_security_group_ids      = ["${concat(list(data.terraform_remote_state.env.sg_env,signum(var.public_network) == 1 ?  data.terraform_remote_state.env.sg_env_public : data.terraform_remote_state.env.sg_env_private,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
+  subnet_id                   = "${element(var.subnets,count.index)}"
+  associate_public_ip_address = "${var.public_network ? "true" : "false"}"
+
+  count = "${var.instance_count}"
+
+  lifecycle {
+    ignore_changes = ["disable_api_termination"]
+  }
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = "${element(var.root_volume_size,count.index)}"
+  }
+
+  ephemeral_block_device {
+    device_name  = "/dev/sdb"
+    virtual_name = "ephemeral0"
+  }
+
+  ephemeral_block_device {
+    device_name  = "/dev/sdc"
+    virtual_name = "ephemeral1"
+  }
+
+  ephemeral_block_device {
+    device_name  = "/dev/sdd"
+    virtual_name = "ephemeral2"
+  }
+
+  ephemeral_block_device {
+    device_name  = "/dev/sde"
+    virtual_name = "ephemeral3"
+  }
+
+  volume_tags {
+    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+    "Env"       = "${data.terraform_remote_state.env.env_name}"
+    "App"       = "${data.terraform_remote_state.app.app_name}"
+    "Service"   = "${var.service_name}"
+    "ManagedBy" = "terraform"
+  }
+
+  tags {
+    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+    "Env"       = "${data.terraform_remote_state.env.env_name}"
+    "App"       = "${data.terraform_remote_state.app.app_name}"
+    "Service"   = "${var.service_name}"
+    "ManagedBy" = "terraform"
+  }
+}
+
 resource "aws_launch_configuration" "service" {
   name_prefix          = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}-"
   instance_type        = "${element(var.instance_type,count.index)}"
