@@ -345,7 +345,7 @@ resource "aws_instance" "service" {
   iam_instance_profile = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
 
   vpc_security_group_ids      = ["${concat(list(data.terraform_remote_state.env.sg_env,signum(var.public_network) == 1 ?  data.terraform_remote_state.env.sg_env_public : data.terraform_remote_state.env.sg_env_private,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
-  subnet_id                   = "${element(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_subnets : data.terraform_remote_state.env.common_subnets),count.index)}"
+  subnet_id                   = "${element(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.cond ? "%[1]s" : "%[2]s",data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets)),count.index)}"
   associate_public_ip_address = "${var.public_network ? "true" : "false"}"
 
   count = "${var.instance_count}"
@@ -502,7 +502,7 @@ resource "aws_security_group_rule" "lb_to_service" {
 resource "aws_elb" "service" {
   name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count   = "${var.want_elb*var.asg_count}"
-  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_subnets : data.terraform_remote_state.env.common_subnets)))}"]
+  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.cond ? "%[1]s" : "%[2]s",data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets))))}"]
 
   security_groups = [
     "${data.terraform_remote_state.env.sg_env_lb}",
@@ -563,7 +563,7 @@ data "aws_acm_certificate" "service" {
 resource "aws_alb" "service" {
   name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count   = "${var.want_alb*var.asg_count}"
-  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_subnets : data.terraform_remote_state.env.common_subnets)))}"]
+  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.cond ? "%[1]s" : "%[2]s",data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets))))}"]
 
   security_groups = [
     "${data.terraform_remote_state.env.sg_env_lb}",
@@ -759,7 +759,7 @@ resource "aws_ecs_cluster" "service" {
 resource "aws_autoscaling_group" "service" {
   name                 = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   launch_configuration = "${element(aws_launch_configuration.service.*.name,count.index)}"
-  vpc_zone_identifier  = ["${concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_subnets : data.terraform_remote_state.env.common_subnets)}"]
+  vpc_zone_identifier  = ["${concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.cond ? "%[1]s" : "%[2]s",data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets))}"]
   min_size             = "${element(var.min_size,count.index)}"
   max_size             = "${element(var.max_size,count.index)}"
   termination_policies = ["${var.termination_policies}"]
@@ -827,7 +827,7 @@ module "efs" {
   efs_name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
   vpc_id   = "${data.terraform_remote_state.env.vpc_id}"
   env_name = "${data.terraform_remote_state.env.env_name}"
-  subnets  = ["${concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,var.public_network ? data.terraform_remote_state.env.public_subnets : data.terraform_remote_state.env.common_subnets)}"]
+  subnets  = ["${concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.cond ? "%[1]s" : "%[2]s",data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets))}"]
   az_count = "${var.az_count}"
   want_efs = "${var.want_efs}"
 }
