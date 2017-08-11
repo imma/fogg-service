@@ -1,3 +1,7 @@
+variable "org" {
+  default = []
+}
+
 variable "az_count" {}
 
 variable "service_name" {}
