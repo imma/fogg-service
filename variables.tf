@@ -185,3 +185,11 @@ output "role" {
 output "group" {
   value = "${aws_iam_group.service.arn}"
 }
+
+output "private_ips" {
+  value = [ "${aws_instance.service.*.private_ip}" ]
+}
+
+output "public_ips" {
+  value = [ "${aws_instance.service.*.public_ip}" ]
+}
