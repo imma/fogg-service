@@ -182,10 +182,6 @@ output "role" {
   value = "${aws_iam_role.service.arn}"
 }
 
-output "group" {
-  value = "${aws_iam_group.service.arn}"
-}
-
 output "private_ips" {
   value = [ "${aws_instance.service.*.private_ip}" ]
 }
