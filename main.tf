@@ -281,38 +281,6 @@ resource "aws_iam_instance_profile" "service" {
   role = "${aws_iam_role.service.name}"
 }
 
-resource "aws_iam_group" "service" {
-  name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
-}
-
-resource "aws_iam_policy" "assume_service" {
-  name        = "assume-${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
-  description = "Assume role ${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
-  depends_on  = ["aws_iam_role.service"]
-
-  policy = <<__EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": [
-          "sts:AssumeRole"
-        ],
-        "Resource": [
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
-        ]
-      }
-    ]
-}
-__EOF
-}
-
-resource "aws_iam_group_policy_attachment" "service" {
-  group      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
-  policy_arn = "${aws_iam_policy.assume_service.arn}"
-}
-
 data "template_file" "user_data_service" {
   template = "${file(var.user_data)}"
 
