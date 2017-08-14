@@ -425,7 +425,6 @@ resource "aws_ses_receipt_rule" "s3" {
   s3_action {
     bucket_name       = "${data.terraform_remote_state.env.s3_env_ses}"
     object_key_prefix = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}.${data.terraform_remote_state.env.private_zone_name}"
-    topic_arn         = "${aws_sns_topic.ses.arn}"
     position          = 1
   }
 }
@@ -686,6 +685,24 @@ resource "aws_sns_topic_subscription" "service" {
 
 resource "aws_sns_topic" "ses" {
   name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-ses"
+  policy = "${element(data.aws_iam_policy_document.service-sns-ses.*.json,count.index)}"
+}
+
+data "aws_iam_policy_document" "service-sns-ses" {
+  statement {
+    actions = [
+      "SNS:Publish",
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ses.amazonaws.com"]
+    }
+
+    resources = [
+      "arn:aws:sns:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-ses"
+    ]
+  }
 }
 
 resource "aws_sqs_queue" "ses" {
