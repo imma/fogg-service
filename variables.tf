@@ -183,9 +183,9 @@ output "role" {
 }
 
 output "private_ips" {
-  value = [ "${aws_instance.service.*.private_ip}" ]
+  value = ["${aws_instance.service.*.private_ip}"]
 }
 
 output "public_ips" {
-  value = [ "${aws_instance.service.*.public_ip}" ]
+  value = ["${aws_instance.service.*.public_ip}"]
 }
