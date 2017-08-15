@@ -98,10 +98,6 @@ output "asg_names" {
   value = ["${aws_autoscaling_group.service.*.name}"]
 }
 
-output "service_name" {
-  value = "${var.service_name}"
-}
-
 output "service_names" {
   value = ["${aws_route53_record.service.*.fqdn}", "${aws_route53_record.service_live.*.fqdn}", "${aws_route53_record.service_staging.*.fqdn}"]
 }
