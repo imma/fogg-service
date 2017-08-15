@@ -311,6 +311,7 @@ data "aws_ami" "block" {
 resource "aws_instance" "service" {
   ami           = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
   instance_type = "${element(var.instance_type,count.index)}"
+  count         = "${var.instance_count}"
 
   key_name             = "${data.terraform_remote_state.env.key_name}"
   user_data            = "${data.template_file.user_data_service.rendered}"
@@ -319,8 +320,6 @@ resource "aws_instance" "service" {
   vpc_security_group_ids      = ["${concat(list(data.terraform_remote_state.env.sg_env,signum(var.public_network) == 1 ?  data.terraform_remote_state.env.sg_env_public : data.terraform_remote_state.env.sg_env_private,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
   subnet_id                   = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets))),count.index)}"
   associate_public_ip_address = "${var.public_network ? "true" : "false"}"
-
-  count = "${var.instance_count}"
 
   lifecycle {
     ignore_changes = ["disable_api_termination"]
@@ -378,6 +377,7 @@ resource "aws_route53_record" "instance" {
   type    = "A"
   ttl     = "60"
   records = ["${element(aws_instance.service.*.private_ip,count.index)}"]
+  count   = "${var.instance_count}"
 }
 
 resource "aws_launch_configuration" "service" {
