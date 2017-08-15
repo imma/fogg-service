@@ -102,6 +102,10 @@ output "service_names" {
   value = ["${aws_route53_record.service.*.fqdn}", "${aws_route53_record.service_live.*.fqdn}", "${aws_route53_record.service_staging.*.fqdn}"]
 }
 
+output "service_name" {
+  value = "${var.service_name}"
+}
+
 output "elb_names" {
   value = ["${aws_elb.service.*.name}"]
 }
