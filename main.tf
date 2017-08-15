@@ -372,7 +372,7 @@ resource "aws_instance" "service" {
 }
 
 resource "aws_route53_record" "instance" {
-  zone_id = "${data.terraform_remote_state.org.public_zone_id}"
+  zone_id = "${data.terraform_remote_state.org.private_zone_id}"
   name    = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
   type    = "A"
   ttl     = "60"
