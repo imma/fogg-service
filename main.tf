@@ -322,7 +322,7 @@ resource "aws_instance" "service" {
   associate_public_ip_address = "${var.public_network ? "true" : "false"}"
 
   lifecycle {
-    ignore_changes = ["disable_api_termination"]
+    ignore_changes = ["disable_api_termination", "ami", "ephemeral_block_device", "user_data", "subnet_id"]
   }
 
   root_block_device {
