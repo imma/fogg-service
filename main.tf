@@ -334,21 +334,25 @@ resource "aws_instance" "service" {
   ephemeral_block_device {
     device_name  = "/dev/sdb"
     virtual_name = "ephemeral0"
+    no_device    = ""
   }
 
   ephemeral_block_device {
     device_name  = "/dev/sdc"
     virtual_name = "ephemeral1"
+    no_device    = ""
   }
 
   ephemeral_block_device {
     device_name  = "/dev/sdd"
     virtual_name = "ephemeral2"
+    no_device    = ""
   }
 
   ephemeral_block_device {
     device_name  = "/dev/sde"
     virtual_name = "ephemeral3"
+    no_device    = ""
   }
 
   volume_tags {
@@ -366,6 +370,14 @@ resource "aws_instance" "service" {
     "Service"   = "${var.service_name}"
     "ManagedBy" = "terraform"
   }
+}
+
+resource "aws_route53_record" "instance" {
+  zone_id = "${data.terraform_remote_state.org.public_zone_id}"
+  name    = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  type    = "A"
+  ttl     = "60"
+  records = ["${element(aws_instance.service.*.private_ip,count.index)}"]
 }
 
 resource "aws_launch_configuration" "service" {
