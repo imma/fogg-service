@@ -829,7 +829,7 @@ resource "aws_autoscaling_notification" "service" {
 }
 
 module "efs" {
-  source   = "../efs"
+  source   = "git@github.com:imma/fogg-efs"
   efs_name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
   vpc_id   = "${data.terraform_remote_state.env.vpc_id}"
   env_name = "${data.terraform_remote_state.env.env_name}"
