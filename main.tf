@@ -900,12 +900,12 @@ resource "packet_device" "service" {
 }
 
 resource "packet_volume" "service" {
-  project_id   = "${packet_project.service.id}"
-  facility     = "${var.packet_facility}"
-  plan         = "storage_1"
-  biling_cycle = "hourly"
-  size         = "40"
-  count        = "${var.want_packet}"
+  project_id    = "${packet_project.service.id}"
+  facility      = "${var.packet_facility}"
+  plan          = "storage_1"
+  billing_cycle = "hourly"
+  size          = "40"
+  count         = "${var.want_packet}"
 }
 
 resource "aws_route53_record" "packet_instance" {
@@ -915,4 +915,61 @@ resource "aws_route53_record" "packet_instance" {
   ttl     = "60"
   records = ["${element(packet_device.service.*.network.0.address,count.index)}"]
   count   = "${var.want_packet*var.packet_instance_count}"
+}
+
+resource "digitalocean_volume" "service" {
+  name   = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}-${data.terraform_remote_state.env.env_name}"
+  region = "${var.do_region}"
+  size   = 50
+  count  = "${var.want_digitalocean}"
+}
+
+resource "digitalocean_droplet" "service" {
+  hostname = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  ssh_keys = ["${data.terraform_remote_state.env.do_ssh_key}"]
+  region   = "${var.do_region}"
+  image    = "ubuntu-16-04-x64"
+  size     = "1gb"
+  count    = "${var.want_digialocean*var.do_instance_count}"
+}
+
+resource "digitalocean_firewall" "service" {
+  hostname = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  count    = "${signum(var.want_digitalocean)}"
+
+  droplet_ids = ["${digitalocean_droplet.bastion.*.id}"]
+
+  inbound_rule = [
+    {
+      protocol         = "tcp"
+      port_range       = "22"
+      source_addresses = ["0.0.0.0/24"]
+    },
+  ]
+
+  outbound_rule = [
+    {
+      protocol              = "tcp"
+      port_range            = "all"
+      destination_addresses = ["0.0.0.0/0", "::/0"]
+    },
+    {
+      protocol              = "udp"
+      port_range            = "all"
+      destination_addresses = ["0.0.0.0/0", "::/0"]
+    },
+    {
+      protocol              = "icmp"
+      destination_addresses = ["0.0.0.0/0", "::/0"]
+    },
+  ]
+}
+
+resource "aws_route53_record" "do_instance" {
+  zone_id  = "${data.terraform_remote_state.env.private_zone_id}"
+  hostname = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  type     = "A"
+  ttl      = "60"
+  records  = ["${digitalocean_droplet.service.*.ipv4_address[count.index]}"]
+  count    = "${var.want_digitalocean*var.do_instance_count}"
 }

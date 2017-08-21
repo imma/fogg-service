@@ -46,6 +46,18 @@ variable "want_subnets" {
   default = "1"
 }
 
+variable "want_digitalocean" {
+  default = "0"
+}
+
+variable "do_instance_count" {
+  default = "0"
+}
+
+variable "do_region" {
+  default = "sfo1"
+}
+
 variable "want_packet" {
   default = "0"
 }
