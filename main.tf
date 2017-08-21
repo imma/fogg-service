@@ -905,5 +905,5 @@ resource "aws_route53_record" "packet_instance" {
   type    = "A"
   ttl     = "60"
   records = ["${element(packet_device.service.*.network.0.address,count.index)}"]
-  count   = "${var.instance_count}"
+  count   = "${var.want_packet*var.packet_instance_count}"
 }
