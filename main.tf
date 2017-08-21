@@ -930,14 +930,14 @@ resource "digitalocean_droplet" "service" {
   region   = "${var.do_region}"
   image    = "ubuntu-16-04-x64"
   size     = "1gb"
-  count    = "${var.want_digialocean*var.do_instance_count}"
+  count    = "${var.want_digitalocean*var.do_instance_count}"
 }
 
 resource "digitalocean_firewall" "service" {
   hostname = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
   count    = "${signum(var.want_digitalocean)}"
 
-  droplet_ids = ["${digitalocean_droplet.bastion.*.id}"]
+  droplet_ids = ["${digitalocean_droplet.service.*.id}"]
 
   inbound_rule = [
     {
