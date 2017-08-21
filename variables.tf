@@ -50,6 +50,22 @@ variable "want_packet" {
   default = "0"
 }
 
+variable "packet_instance_count" {
+  default = "0"
+}
+
+variable "packet_facility" {
+  default = "sjc1"
+}
+
+variable "packet_plan" {
+  default = "baremetal_0"
+}
+
+variable "packet_operating_system" {
+  default = "ubuntu_16_04"
+}
+
 variable "user_data" {
   default = "module/init/user-data.template"
 }
