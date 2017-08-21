@@ -883,3 +883,8 @@ resource "aws_codecommit_repository" "service" {
 resource "aws_codedeploy_app" "service" {
   name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
 }
+
+resource "packet_project" "service" {
+  name  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+  count = "${var.want_packet}"
+}

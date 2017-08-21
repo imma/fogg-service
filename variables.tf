@@ -46,6 +46,10 @@ variable "want_subnets" {
   default = "1"
 }
 
+variable "want_packet" {
+  default = "0"
+}
+
 variable "user_data" {
   default = "module/init/user-data.template"
 }
