@@ -219,5 +219,5 @@ output "packet_project_id" {
 }
 
 output "packet_network" {
-  value = ["${packet_device.service.*.network.address}"]
+  value = "${packet_device.service.*.network}"
 }
