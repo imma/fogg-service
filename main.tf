@@ -898,3 +898,12 @@ resource "packet_device" "service" {
   plan             = "${var.packet_plan}"
   count            = "${var.want_packet*var.packet_instance_count}"
 }
+
+resource "aws_route53_record" "packet_instance" {
+  zone_id = "${data.terraform_remote_state.env.private_zone_id}"
+  name    = "packet-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  type    = "A"
+  ttl     = "60"
+  records = ["${element(packet_device.service.*.network.0.address,count.index)}"]
+  count   = "${var.instance_count}"
+}
