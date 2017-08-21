@@ -197,3 +197,7 @@ output "private_ips" {
 output "public_ips" {
   value = ["${aws_instance.service.*.public_ip}"]
 }
+
+output "packet_project_id" {
+  value = "${packet_project.service.id}"
+}
