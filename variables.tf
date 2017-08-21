@@ -218,6 +218,6 @@ output "packet_project_id" {
   value = "${packet_project.service.id}"
 }
 
-output "packet_network" {
-  value = "${packet_device.service.*.network}"
+output "packet_public_ips" {
+  value = "${packet_device.service.*.network.0.address}"
 }
