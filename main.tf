@@ -925,7 +925,7 @@ resource "digitalocean_volume" "service" {
 }
 
 resource "digitalocean_droplet" "service" {
-  hostname = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  name     = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
   ssh_keys = ["${data.terraform_remote_state.env.do_ssh_key}"]
   region   = "${var.do_region}"
   image    = "ubuntu-16-04-x64"
@@ -934,8 +934,8 @@ resource "digitalocean_droplet" "service" {
 }
 
 resource "digitalocean_firewall" "service" {
-  hostname = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
-  count    = "${signum(var.want_digitalocean)}"
+  name  = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  count = "${signum(var.want_digitalocean)}"
 
   droplet_ids = ["${digitalocean_droplet.service.*.id}"]
 
@@ -966,10 +966,10 @@ resource "digitalocean_firewall" "service" {
 }
 
 resource "aws_route53_record" "do_instance" {
-  zone_id  = "${data.terraform_remote_state.env.private_zone_id}"
-  hostname = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
-  type     = "A"
-  ttl      = "60"
-  records  = ["${digitalocean_droplet.service.*.ipv4_address[count.index]}"]
-  count    = "${var.want_digitalocean*var.do_instance_count}"
+  zone_id = "${data.terraform_remote_state.env.private_zone_id}"
+  name    = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  type    = "A"
+  ttl     = "60"
+  records = ["${digitalocean_droplet.service.*.ipv4_address[count.index]}"]
+  count   = "${var.want_digitalocean*var.do_instance_count}"
 }
