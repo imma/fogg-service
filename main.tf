@@ -890,7 +890,7 @@ resource "packet_project" "service" {
 }
 
 resource "packet_device" "service" {
-  name             = "packet-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  hostname         = "packet-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
   project_id       = "${packet_project.service.id}"
   billing_cycle    = "hourly"
   operating_system = "${var.packet_operating_system}"
