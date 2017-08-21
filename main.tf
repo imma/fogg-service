@@ -925,12 +925,13 @@ resource "digitalocean_volume" "service" {
 }
 
 resource "digitalocean_droplet" "service" {
-  name     = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
-  ssh_keys = ["${data.terraform_remote_state.env.do_ssh_key}"]
-  region   = "${var.do_region}"
-  image    = "ubuntu-16-04-x64"
-  size     = "1gb"
-  count    = "${var.want_digitalocean*var.do_instance_count}"
+  name       = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  ssh_keys   = ["${data.terraform_remote_state.env.do_ssh_key}"]
+  region     = "${var.do_region}"
+  image      = "ubuntu-16-04-x64"
+  size       = "1gb"
+  volume_ids = ["${compact(list(count.index == 0 ? digitalocean_volume.service.id : ""))}"]
+  count      = "${var.want_digitalocean*var.do_instance_count}"
 }
 
 resource "digitalocean_firewall" "service" {
