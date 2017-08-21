@@ -920,7 +920,7 @@ resource "aws_route53_record" "packet_instance" {
 resource "digitalocean_volume" "service" {
   name   = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}-${data.terraform_remote_state.env.env_name}"
   region = "${var.do_region}"
-  size   = 50
+  size   = 40
   count  = "${var.want_digitalocean}"
 }
 
