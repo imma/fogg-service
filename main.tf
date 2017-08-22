@@ -987,11 +987,11 @@ resource "aws_api_gateway_method" "service" {
 
 resource "aws_lambda_function" "status" {
   filename         = "src/status/deployment.zip"
-  function_name    = "status"
+  function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-status"
   role             = "${aws_iam_role.service.arn}"
   handler          = "app.app"
   runtime          = "python3.6"
-  source_code_hash = "${base64sha256(file("src/status/lambda/status.zip/deployment.zip"))}"
+  source_code_hash = "${base64sha256(file("src/status/deployment.zip"))}"
   publish          = true
 
   #vpc_config {
