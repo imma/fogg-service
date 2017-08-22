@@ -929,7 +929,7 @@ resource "digitalocean_droplet" "service" {
 
 resource "digitalocean_firewall" "service" {
   name  = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
-  count = "${signum(var.want_digialocean*var.do_instance_count)}"
+  count = "${signum(var.want_digitalocean*var.do_instance_count)}"
 
   droplet_ids = ["${digitalocean_droplet.service.*.id}"]
 
