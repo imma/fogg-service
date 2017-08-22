@@ -223,7 +223,7 @@ data "aws_iam_policy_document" "service" {
       "lambda:InvokeFunction",
     ]
 
-    resource = [
+    resources = [
       "*",
     ]
   }
