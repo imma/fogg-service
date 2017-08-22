@@ -1003,16 +1003,16 @@ resource "aws_lambda_function" "status" {
 resource "aws_lambda_permission" "service_gateway" {
   statement_id  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-status-gateway"
   action        = "lambda:InvokeFunction"
-  function_name = "arn:aws:lambda:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:function:${aws_lambda_function.status.function_name}"
   principal     = "apigateway.amazonaws.com"
+  function_name = "${aws_lambda_function.status.function_name}"
 }
 
 resource "aws_lambda_permission" "service_method" {
   statement_id  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-status-method"
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  function_name = "arn:aws:lambda:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:function:${aws_lambda_function.status.function_name}"
-  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${aws_api_gateway_rest_api.service.id}/*/*/*"
+  function_name = "${aws_lambda_function.status.function_name}"
+  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${aws_api_gateway_rest_api.service.id}/*/${aws_api_gateway_integration.status.integration_http_method}/*"
 }
 
 resource "aws_api_gateway_integration" "status" {
