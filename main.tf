@@ -214,18 +214,7 @@ data "aws_iam_policy_document" "service" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
-
-  statement {
-    actions = [
-      "sts:AssumeRole",
-    ]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ecs.amazonaws.com"]
+      identifiers = ["ec2.amazonaws.com", "ecs.amazonaws.com", "lambda.amazonaws.com", "apigateway.amazonaws.com"]
     }
   }
 
@@ -977,4 +966,74 @@ resource "aws_route53_record" "do_instance" {
   ttl     = "60"
   records = ["${digitalocean_droplet.service.*.ipv4_address[count.index]}"]
   count   = "${var.want_digitalocean*var.do_instance_count}"
+}
+
+resource "aws_api_gateway_rest_api" "service" {
+  name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+}
+
+resource "aws_api_gateway_resource" "service" {
+  rest_api_id = "${aws_api_gateway_rest_api.service.id}"
+  parent_id   = "${aws_api_gateway_rest_api.service.root_resource_id}"
+  path_part   = "/status"
+}
+
+resource "aws_api_gateway_method" "service" {
+  rest_api_id   = "${aws_api_gateway_rest_api.service.id}"
+  resource_id   = "${aws_api_gateway_resource.service.id}"
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+data "archive_file" "status" {
+  type        = "zip"
+  source_file = "src/status/main.py"
+  output_path = "lambda/status.zip"
+}
+
+resource "aws_lambda_function" "status" {
+  filename         = "${data.archive_file.status.output_path}"
+  function_name    = "status"
+  role             = "${aws_iam_role.service.arn}"
+  handler          = "handler"
+  runtime          = "python3.6"
+  source_code_hash = "${base64sha256(file("${data.archive_file.status.output_path}"))}"
+  publish          = true
+}
+
+resource "aws_api_gateway_integration" "service" {
+  rest_api_id             = "${aws_api_gateway_rest_api.service.id}"
+  resource_id             = "${aws_api_gateway_resource.service.id}"
+  http_method             = "${aws_api_gateway_method.service.http_method}"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.region}:${data.terraform_remote_state.org.aws_account_id}:function:${aws_lambda_function.status.function_name}/invocations"
+  integration_http_method = "POST"
+}
+
+resource "aws_api_gateway_deployment" "service_staging" {
+  depends_on = [
+    "aws_api_gateway_method.service",
+    "aws_api_gateway_integration.service-integration",
+  ]
+
+  rest_api_id = "${aws_api_gateway_rest_api.service.id}"
+  stage_name  = "staging"
+}
+
+resource "aws_api_gateway_deployment" "service_live" {
+  depends_on = [
+    "aws_api_gateway_method.service",
+    "aws_api_gateway_integration.service-integration",
+  ]
+
+  rest_api_id = "${aws_api_gateway_rest_api.service.id}"
+  stage_name  = "live"
+}
+
+output "staging_url" {
+  value = "https://${aws_api_gateway_deployment.service_staging.rest_api_id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.service_staging.stage_name}"
+}
+
+output "live_url" {
+  value = "https://${aws_api_gateway_deployment.service_live.rest_api_id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.service_live.stage_name}"
 }
