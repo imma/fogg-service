@@ -220,6 +220,16 @@ data "aws_iam_policy_document" "service" {
 
   statement {
     actions = [
+      "lambda:InvokeFunction",
+    ]
+
+    resource = [
+      "*",
+    ]
+  }
+
+  statement {
+    actions = [
       "sts:AssumeRole",
     ]
 
