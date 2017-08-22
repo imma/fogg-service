@@ -986,7 +986,7 @@ resource "aws_api_gateway_resource" "service" {
 resource "aws_api_gateway_method" "service" {
   rest_api_id   = "${aws_api_gateway_rest_api.service.id}"
   resource_id   = "${aws_api_gateway_resource.service.id}"
-  http_method   = "GET"
+  http_method   = "POST"
   authorization = "NONE"
 }
 
@@ -998,11 +998,21 @@ resource "aws_lambda_function" "status" {
   runtime          = "python3.6"
   source_code_hash = "${base64sha256(file("src/status/deployment.zip"))}"
   publish          = true
+}
 
-  #vpc_config {
-  #  subnet_ids         = ["${data.terraform_remote_state.env.common_subnets}"]
-  #  security_group_ids = ["${concat(list(data.terraform_remote_state.env.sg_env,signum(var.public_network) == 1 ?  data.terraform_remote_state.env.sg_env_public : data.terraform_remote_state.env.sg_env_private,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
-  #}
+resource "aws_lambda_permission" "service_gateway" {
+  statement_id  = ""
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.status.function_name}"
+  principal     = "apigateway.amazonaws.com"
+}
+
+resource "aws_lambda_permission" "service_method" {
+  statement_id  = ""
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.status.function_name}"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${aws_api_gateway_rest_api.service.id}/*/*"
 }
 
 resource "aws_api_gateway_integration" "status" {
@@ -1011,7 +1021,7 @@ resource "aws_api_gateway_integration" "status" {
   http_method             = "${aws_api_gateway_method.service.http_method}"
   type                    = "AWS_PROXY"
   uri                     = "arn:aws:apigateway:${var.env_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:function:${aws_lambda_function.status.function_name}/invocations"
-  integration_http_method = "GET"
+  integration_http_method = "POST"
 }
 
 resource "aws_api_gateway_deployment" "status_staging" {
