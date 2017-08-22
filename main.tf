@@ -999,6 +999,11 @@ resource "aws_lambda_function" "status" {
   runtime          = "python3.6"
   source_code_hash = "${base64sha256(file("${data.archive_file.status.output_path}"))}"
   publish          = true
+
+  vpc_config {
+    subnet_ids         = ["${compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets)))}"]
+    security_group_ids = ["${concat(list(data.terraform_remote_state.env.sg_env,signum(var.public_network) == 1 ?  data.terraform_remote_state.env.sg_env_public : data.terraform_remote_state.env.sg_env_private,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
+  }
 }
 
 resource "aws_api_gateway_integration" "status" {
