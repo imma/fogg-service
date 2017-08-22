@@ -985,19 +985,13 @@ resource "aws_api_gateway_method" "service" {
   authorization = "NONE"
 }
 
-data "archive_file" "status" {
-  type        = "zip"
-  source_file = "src/status/status.py"
-  output_path = "lambda/status.zip"
-}
-
 resource "aws_lambda_function" "status" {
-  filename         = "${data.archive_file.status.output_path}"
+  filename         = "src/status/lambda/status.zip/deployment.zip"
   function_name    = "status"
   role             = "${aws_iam_role.service.arn}"
-  handler          = "status.handler"
+  handler          = "app.app"
   runtime          = "python3.6"
-  source_code_hash = "${base64sha256(file("${data.archive_file.status.output_path}"))}"
+  source_code_hash = "${base64sha256(file("src/status/lambda/status.zip/deployment.zip"))}"
   publish          = true
 
   #vpc_config {
