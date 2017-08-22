@@ -981,12 +981,12 @@ resource "aws_api_gateway_resource" "service" {
 resource "aws_api_gateway_method" "service" {
   rest_api_id   = "${aws_api_gateway_rest_api.service.id}"
   resource_id   = "${aws_api_gateway_resource.service.id}"
-  http_method   = "POST"
+  http_method   = "GET"
   authorization = "NONE"
 }
 
 resource "aws_lambda_function" "status" {
-  filename         = "src/status/lambda/status.zip/deployment.zip"
+  filename         = "src/status/deployment.zip"
   function_name    = "status"
   role             = "${aws_iam_role.service.arn}"
   handler          = "app.app"
@@ -1006,7 +1006,7 @@ resource "aws_api_gateway_integration" "status" {
   http_method             = "${aws_api_gateway_method.service.http_method}"
   type                    = "AWS_PROXY"
   uri                     = "arn:aws:apigateway:${var.env_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:function:${aws_lambda_function.status.function_name}/invocations"
-  integration_http_method = "POST"
+  integration_http_method = "GET"
 }
 
 resource "aws_api_gateway_deployment" "status_staging" {
