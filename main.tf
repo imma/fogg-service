@@ -1000,10 +1000,10 @@ resource "aws_lambda_function" "status" {
   source_code_hash = "${base64sha256(file("${data.archive_file.status.output_path}"))}"
   publish          = true
 
-  #vpc_config {
-  #  subnet_ids         = ["${data.terraform_remote_state.env.common_subnets}"]
-  #  security_group_ids = ["${concat(list(data.terraform_remote_state.env.sg_env,signum(var.public_network) == 1 ?  data.terraform_remote_state.env.sg_env_public : data.terraform_remote_state.env.sg_env_private,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
-  #}
+  vpc_config {
+    subnet_ids         = ["${data.terraform_remote_state.env.common_subnets}"]
+    security_group_ids = ["${concat(list(data.terraform_remote_state.env.sg_env,signum(var.public_network) == 1 ?  data.terraform_remote_state.env.sg_env_public : data.terraform_remote_state.env.sg_env_private,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
+  }
 }
 
 resource "aws_api_gateway_integration" "status" {
