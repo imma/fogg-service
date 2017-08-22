@@ -247,9 +247,9 @@ output "kms_key_id" {
 }
 
 output "staging_url" {
-  value = "https://${aws_api_gateway_deployment.status_staging.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.status_staging.stage_name}"
+  value = "https://${aws_api_gateway_deployment.status_staging.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.status_staging.stage_name}/${aws_api_gateway_resource.service.path}"
 }
 
 output "live_url" {
-  value = "https://${aws_api_gateway_deployment.status_live.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.status_live.stage_name}"
+  value = "https://${aws_api_gateway_deployment.status_live.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.status_live.stage_name}/${aws_api_gateway_resource.service.path}"
 }
