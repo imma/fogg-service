@@ -1012,7 +1012,7 @@ resource "aws_lambda_permission" "service_method" {
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
   function_name = "arn:aws:lambda:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:function:${aws_lambda_function.status.function_name}"
-  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${aws_api_gateway_rest_api.service.id}/*/POST/*"
+  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${aws_api_gateway_rest_api.service.id}/*/*/*"
 }
 
 resource "aws_api_gateway_integration" "status" {
