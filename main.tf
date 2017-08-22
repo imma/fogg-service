@@ -1018,22 +1018,12 @@ resource "aws_api_gateway_integration" "status" {
   content_handling        = "CONVERT_TO_TEXT"
 }
 
-resource "aws_api_gateway_deployment" "status_staging" {
+resource "aws_api_gateway_deployment" "status" {
   depends_on = [
     "aws_api_gateway_method.service",
     "aws_api_gateway_integration.status",
   ]
 
   rest_api_id = "${aws_api_gateway_rest_api.service.id}"
-  stage_name  = "staging"
-}
-
-resource "aws_api_gateway_deployment" "status_live" {
-  depends_on = [
-    "aws_api_gateway_method.service",
-    "aws_api_gateway_integration.status",
-  ]
-
-  rest_api_id = "${aws_api_gateway_rest_api.service.id}"
-  stage_name  = "live"
+  stage_name  = "api"
 }
