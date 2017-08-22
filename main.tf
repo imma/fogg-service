@@ -656,9 +656,12 @@ resource "aws_sns_topic" "service" {
 }
 
 resource "aws_sqs_queue" "service" {
-  name   = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
-  policy = "${element(data.aws_iam_policy_document.service-sns-sqs.*.json,count.index)}"
-  count  = "${var.asg_count}"
+  name                        = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
+  policy                      = "${element(data.aws_iam_policy_document.service-sns-sqs.*.json,count.index)}"
+  count                       = "${var.asg_count}"
+  fifo_queue                  = true
+  content_based_deduplication = true
+  kms_master_key_id           = "${aws_kms_alias.service.name}"
 }
 
 data "aws_iam_policy_document" "service-sns-sqs" {
