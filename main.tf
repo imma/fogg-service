@@ -975,7 +975,6 @@ resource "aws_api_gateway_rest_api" "service" {
 resource "aws_api_gateway_resource" "service" {
   rest_api_id = "${aws_api_gateway_rest_api.service.id}"
   parent_id   = "${aws_api_gateway_rest_api.service.root_resource_id}"
-  path_part   = "status"
 }
 
 resource "aws_api_gateway_method" "service" {
