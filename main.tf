@@ -220,16 +220,6 @@ data "aws_iam_policy_document" "service" {
 
   statement {
     actions = [
-      "lambda:InvokeFunction",
-    ]
-
-    resources = [
-      "*",
-    ]
-  }
-
-  statement {
-    actions = [
       "sts:AssumeRole",
     ]
 
@@ -243,6 +233,11 @@ data "aws_iam_policy_document" "service" {
 resource "aws_iam_role" "service" {
   name               = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
   assume_role_policy = "${data.aws_iam_policy_document.service.json}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_exec" {
+  role       = "${aws_iam_role.service.name}"
+  policy_arn = "arn:aws:iam::aws:policy/AWSLambdaExecute"
 }
 
 resource "aws_iam_role_policy_attachment" "ecr_ro" {
