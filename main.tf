@@ -868,11 +868,13 @@ resource "aws_kms_key" "service" {
     "Service"   = "${var.service_name}"
     "ManagedBy" = "terraform"
   }
+
+  count = "${var.want_kms}"
 }
 
 resource "aws_kms_alias" "service" {
   name          = "alias/${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
-  target_key_id = "${aws_kms_key.service.id}"
+  target_key_id = "${coalesce(aws_kms_key.service.id,data.terraform_remote_state.env.kms_arn)}"
 }
 
 resource "aws_codecommit_repository" "service" {

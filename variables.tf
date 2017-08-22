@@ -46,6 +46,10 @@ variable "want_subnets" {
   default = "1"
 }
 
+variable "want_kms" {
+  default = "0"
+}
+
 variable "want_digitalocean" {
   default = "0"
 }
@@ -232,4 +236,8 @@ output "packet_project_id" {
 
 output "packet_public_ips" {
   value = "${packet_device.service.*.network.0.address}"
+}
+
+output "aws_kms_arn" {
+  value = "${aws_kms_alias.service.target_key_id}"
 }
