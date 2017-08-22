@@ -656,7 +656,7 @@ resource "aws_sns_topic" "service" {
 }
 
 resource "aws_sqs_queue" "service" {
-  name                        = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
+  name                        = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}.fifo"
   policy                      = "${element(data.aws_iam_policy_document.service-sns-sqs.*.json,count.index)}"
   count                       = "${var.asg_count}"
   fifo_queue                  = true
@@ -676,7 +676,7 @@ data "aws_iam_policy_document" "service-sns-sqs" {
     }
 
     resources = [
-      "arn:aws:sqs:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}",
+      "arn:aws:sqs:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}.fifo",
     ]
 
     condition {
