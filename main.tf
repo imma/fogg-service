@@ -661,7 +661,6 @@ resource "aws_sqs_queue" "service" {
   count                       = "${var.asg_count}"
   fifo_queue                  = true
   content_based_deduplication = true
-  kms_master_key_id           = "${aws_kms_alias.service.name}"
 }
 
 data "aws_iam_policy_document" "service-sns-sqs" {
