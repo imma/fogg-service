@@ -1006,7 +1006,7 @@ resource "aws_api_gateway_integration" "service" {
   resource_id             = "${aws_api_gateway_resource.service.id}"
   http_method             = "${aws_api_gateway_method.service.http_method}"
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.region}:${data.terraform_remote_state.org.aws_account_id}:function:${aws_lambda_function.status.function_name}/invocations"
+  uri                     = "arn:aws:apigateway:${var.env_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:function:${aws_lambda_function.status.function_name}/invocations"
   integration_http_method = "POST"
 }
 
@@ -1031,9 +1031,9 @@ resource "aws_api_gateway_deployment" "service_live" {
 }
 
 output "staging_url" {
-  value = "https://${aws_api_gateway_deployment.service_staging.rest_api_id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.service_staging.stage_name}"
+  value = "https://${aws_api_gateway_deployment.service_staging.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.service_staging.stage_name}"
 }
 
 output "live_url" {
-  value = "https://${aws_api_gateway_deployment.service_live.rest_api_id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.service_live.stage_name}"
+  value = "https://${aws_api_gateway_deployment.service_live.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.service_live.stage_name}"
 }
