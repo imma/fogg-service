@@ -874,7 +874,7 @@ resource "aws_kms_key" "service" {
 
 resource "aws_kms_alias" "service" {
   name          = "alias/${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
-  target_key_id = "${coalesce(aws_kms_key.service.*.id,data.terraform_remote_state.env.kms_arn)}"
+  target_key_id = "${element(compact(concat(aws_kms_key.service.*.id,list(data.terraform_remote_state.env.kms_arn))),0)}"
 }
 
 resource "aws_codecommit_repository" "service" {
