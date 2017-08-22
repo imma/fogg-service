@@ -238,6 +238,10 @@ output "packet_public_ips" {
   value = "${packet_device.service.*.network.0.address}"
 }
 
-output "aws_kms_arn" {
-  value = "${aws_kms_alias.service.target_key_id}"
+output "kms_arn" {
+  value = "${element(coalescelist(aws_kms_key.service.*.arn,list(data.terraform_remote_state.env.kms_arn)),0)}"
+}
+
+output "kms_key_id" {
+  value = "${element(coalescelist(aws_kms_key.service.*.key_id,list(data.terraform_remote_state.env.kms_key_id)),0)}"
 }
