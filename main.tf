@@ -1001,14 +1001,14 @@ resource "aws_lambda_function" "status" {
 }
 
 resource "aws_lambda_permission" "service_gateway" {
-  statement_id  = ""
+  statement_id  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-status-gateway"
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.status.function_name}"
   principal     = "apigateway.amazonaws.com"
 }
 
 resource "aws_lambda_permission" "service_method" {
-  statement_id  = ""
+  statement_id  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-status-method"
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.status.function_name}"
   principal     = "apigateway.amazonaws.com"
