@@ -1000,14 +1000,7 @@ resource "aws_lambda_function" "status" {
   publish          = true
 }
 
-resource "aws_lambda_permission" "service_gateway" {
-  statement_id  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-status-gateway"
-  action        = "lambda:InvokeFunction"
-  principal     = "apigateway.amazonaws.com"
-  function_name = "${aws_lambda_function.status.function_name}"
-}
-
-resource "aws_lambda_permission" "service_method" {
+resource "aws_lambda_permission" "service" {
   statement_id  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-status-method"
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
