@@ -247,5 +247,5 @@ output "kms_key_id" {
 }
 
 output "api_gateway" {
-  value = "https://${aws_api_gateway_deployment.status_staging.rest_api_id}.execute-api.${var.env_region}.amazonaws.com"
+  value = "https://${aws_api_gateway_deployment.status.rest_api_id}.execute-api.${var.env_region}.amazonaws.com"
 }
