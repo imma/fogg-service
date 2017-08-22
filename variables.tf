@@ -245,3 +245,11 @@ output "kms_arn" {
 output "kms_key_id" {
   value = "${element(coalescelist(aws_kms_key.service.*.key_id,list(data.terraform_remote_state.env.kms_key_id)),0)}"
 }
+
+output "staging_url" {
+  value = "https://${aws_api_gateway_deployment.status_staging.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.status_staging.stage_name}"
+}
+
+output "live_url" {
+  value = "https://${aws_api_gateway_deployment.status_live.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.status_live.stage_name}"
+}

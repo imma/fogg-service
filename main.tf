@@ -1034,11 +1034,3 @@ resource "aws_api_gateway_deployment" "status_live" {
   rest_api_id = "${aws_api_gateway_rest_api.service.id}"
   stage_name  = "live"
 }
-
-output "staging_url" {
-  value = "https://${aws_api_gateway_deployment.status_staging.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.status_staging.stage_name}"
-}
-
-output "live_url" {
-  value = "https://${aws_api_gateway_deployment.status_live.rest_api_id}.execute-api.${var.env_region}.amazonaws.com/${aws_api_gateway_deployment.status_live.stage_name}"
-}
