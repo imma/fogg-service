@@ -973,7 +973,7 @@ resource "aws_route53_record" "do_instance" {
   count   = "${var.want_digitalocean*var.do_instance_count}"
 }
 
-/* lambda */
+/* resource */
 resource "aws_lambda_function" "service" {
   filename         = "src/service/deployment.zip"
   function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${var.service_name}"
@@ -984,7 +984,6 @@ resource "aws_lambda_function" "service" {
   publish          = true
 }
 
-/* resource */
 resource "aws_api_gateway_resource" "service" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
   parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
