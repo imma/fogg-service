@@ -1032,14 +1032,14 @@ resource "aws_lambda_permission" "world" {
 
 resource "aws_api_gateway_resource" "hello" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
-  path_part   = "api/hello"
+  parent_id   = "${aws_api_gateway_resource.service.id}"
+  path_part   = "hello"
 }
 
 resource "aws_api_gateway_resource" "world" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
-  path_part   = "api/world"
+  parent_id   = "${aws_api_gateway_resource.service.id}"
+  path_part   = "world"
 }
 
 resource "aws_api_gateway_method" "hello" {
@@ -1057,6 +1057,12 @@ resource "aws_api_gateway_method" "world" {
 }
 
 /* deployment */
+resource "aws_api_gateway_resource" "service" {
+  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
+  parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
+  path_part   = "${var.service_name}"
+}
+
 resource "aws_api_gateway_deployment" "service" {
   depends_on = [
     "aws_api_gateway_method.hello",
