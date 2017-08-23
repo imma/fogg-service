@@ -976,7 +976,7 @@ resource "aws_route53_record" "do_instance" {
 resource "aws_api_gateway_resource" "service" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
   parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
-  path_part   = "${var.service_name}"
+  path_part   = "live"
 }
 
 resource "aws_api_gateway_method" "service" {
@@ -1013,7 +1013,7 @@ resource "aws_api_gateway_deployment" "service" {
   ]
 
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  stage_name  = "live"
+  stage_name  = "${var.service_name}""
 }
 
 resource "aws_lambda_permission" "service" {
