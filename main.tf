@@ -979,13 +979,6 @@ resource "aws_api_gateway_resource" "service" {
   path_part   = "live"
 }
 
-resource "aws_api_gateway_method" "service" {
-  rest_api_id   = "${data.terraform_remote_state.env.api_gateway}"
-  resource_id   = "${aws_api_gateway_resource.service.id}"
-  http_method   = "POST"
-  authorization = "NONE"
-}
-
 resource "aws_lambda_function" "service" {
   filename         = "src/service/deployment.zip"
   function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${var.service_name}"
@@ -1022,4 +1015,22 @@ resource "aws_lambda_permission" "service" {
   principal     = "apigateway.amazonaws.com"
   function_name = "${aws_lambda_function.service.function_name}"
   source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.api_gateway}/*/${aws_api_gateway_integration.service.integration_http_method}/*"
+}
+
+resource "aws_api_gateway_method" "service" {
+  rest_api_id   = "${data.terraform_remote_state.env.api_gateway}"
+  resource_id   = "${aws_api_gateway_resource.service.id}"
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_settings" "service" {
+  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
+  stage_name  = "${aws_api_gateway_deployment.service.stage_name}"
+  method_path = "${aws_api_gateway_resource.service.path_part}/${aws_api_gateway_method.service.http_method}"
+
+  settings {
+    metrics_enabled = true
+    logging_level   = "INFO"
+  }
 }
