@@ -1069,7 +1069,7 @@ resource "aws_api_gateway_deployment" "service" {
 
 resource "aws_api_gateway_method_settings" "service" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  stage_name  = "${aws_api_gateway_deployment.env.stage_name}"
+  stage_name  = "${aws_api_gateway_deployment.service.stage_name}"
   method_path = "${aws_api_gateway_resource.service.path_part}/*"
 
   settings {
@@ -1079,8 +1079,8 @@ resource "aws_api_gateway_method_settings" "service" {
   }
 }
 
-resource "aws_api_gateway_base_path_mapping" "env" {
+resource "aws_api_gateway_base_path_mapping" "service" {
   api_id      = "${data.terraform_remote_state.env.api_gateway}"
-  stage_name  = "${aws_api_gateway_deployment.env.stage_name}"
+  stage_name  = "${aws_api_gateway_deployment.service.stage_name}"
   domain_name = "${data.terraform_remote_state.env.private_zone_name}"
 }
