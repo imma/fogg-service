@@ -976,7 +976,7 @@ resource "aws_route53_record" "do_instance" {
 /* resource */
 resource "aws_lambda_function" "hello" {
   filename         = "src/hello/deployment.zip"
-  function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${var.service_name}"
+  function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-hello"
   role             = "${aws_iam_role.service.arn}"
   handler          = "app.app"
   runtime          = "python3.6"
@@ -986,7 +986,7 @@ resource "aws_lambda_function" "hello" {
 
 resource "aws_lambda_function" "world" {
   filename         = "src/world/deployment.zip"
-  function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${var.service_name}"
+  function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-world"
   role             = "${aws_iam_role.service.arn}"
   handler          = "app.app"
   runtime          = "python3.6"
