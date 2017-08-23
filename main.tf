@@ -1019,7 +1019,7 @@ resource "aws_lambda_permission" "hello" {
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
   function_name = "${aws_lambda_function.hello.function_name}"
-  source_arn    = "${data.terraform_remote_state.env.api_gateway_execution_arn}/*/*"
+  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.api_gateway}/*/*/*"
 }
 
 resource "aws_lambda_permission" "world" {
@@ -1027,7 +1027,7 @@ resource "aws_lambda_permission" "world" {
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
   function_name = "${aws_lambda_function.world.function_name}"
-  source_arn    = "${data.terraform_remote_state.env.api_gateway_execution_arn}/*/*"
+  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.api_gateway}/*/*/*"
 }
 
 resource "aws_api_gateway_resource" "hello" {
