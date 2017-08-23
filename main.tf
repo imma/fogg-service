@@ -1070,7 +1070,7 @@ resource "aws_api_gateway_deployment" "service" {
 resource "aws_api_gateway_method_settings" "service" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
   stage_name  = "${aws_api_gateway_deployment.service.stage_name}"
-  method_path = "${aws_api_gateway_resource.service.path_part}/*"
+  method_path = "*/*"
 
   settings {
     metrics_enabled    = true
