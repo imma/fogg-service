@@ -1056,40 +1056,8 @@ resource "aws_api_gateway_method" "world" {
   authorization = "NONE"
 }
 
-/* deployment */
 resource "aws_api_gateway_resource" "service" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
   parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
   path_part   = "${var.service_name}"
-}
-
-resource "aws_api_gateway_deployment" "service" {
-  depends_on = [
-    "aws_api_gateway_method.hello",
-    "aws_api_gateway_method.world",
-    "aws_api_gateway_integration.hello",
-    "aws_api_gateway_integration.world",
-  ]
-
-  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  stage_name  = "${var.service_name}_live"
-}
-
-resource "aws_api_gateway_method_settings" "service" {
-  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  stage_name  = "${aws_api_gateway_deployment.service.stage_name}"
-  method_path = "*/*"
-
-  settings {
-    metrics_enabled    = true
-    logging_level      = "INFO"
-    data_trace_enabled = true
-  }
-}
-
-resource "aws_api_gateway_base_path_mapping" "service" {
-  api_id      = "${data.terraform_remote_state.env.api_gateway}"
-  stage_name  = "${aws_api_gateway_deployment.service.stage_name}"
-  domain_name = "${data.terraform_remote_state.env.private_zone_name}"
-  base_path   = "${var.service_name}"
 }
