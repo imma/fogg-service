@@ -973,57 +973,53 @@ resource "aws_route53_record" "do_instance" {
   count   = "${var.want_digitalocean*var.do_instance_count}"
 }
 
-resource "aws_api_gateway_rest_api" "service" {
-  name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
-}
-
 resource "aws_api_gateway_resource" "service" {
-  rest_api_id = "${aws_api_gateway_rest_api.service.id}"
-  parent_id   = "${aws_api_gateway_rest_api.service.root_resource_id}"
-  path_part   = "status"
+  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
+  parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
+  path_part   = "${var.service_name}"
 }
 
 resource "aws_api_gateway_method" "service" {
-  rest_api_id   = "${aws_api_gateway_rest_api.service.id}"
+  rest_api_id   = "${data.terraform_remote_state.env.api_gateway}"
   resource_id   = "${aws_api_gateway_resource.service.id}"
   http_method   = "POST"
   authorization = "NONE"
 }
 
-resource "aws_lambda_function" "status" {
-  filename         = "src/status/deployment.zip"
-  function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-status"
+resource "aws_lambda_function" "service" {
+  filename         = "src/service/deployment.zip"
+  function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${var.service_name}"
   role             = "${aws_iam_role.service.arn}"
   handler          = "app.app"
   runtime          = "python3.6"
-  source_code_hash = "${base64sha256(file("src/status/deployment.zip"))}"
+  source_code_hash = "${base64sha256(file("src/service/deployment.zip"))}"
   publish          = true
 }
 
-resource "aws_lambda_permission" "service" {
-  statement_id  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-status-method"
-  action        = "lambda:InvokeFunction"
-  principal     = "apigateway.amazonaws.com"
-  function_name = "${aws_lambda_function.status.function_name}"
-  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${aws_api_gateway_rest_api.service.id}/*/${aws_api_gateway_integration.status.integration_http_method}/*"
-}
-
-resource "aws_api_gateway_integration" "status" {
-  rest_api_id             = "${aws_api_gateway_rest_api.service.id}"
+resource "aws_api_gateway_integration" "service" {
+  rest_api_id             = "${data.terraform_remote_state.env.api_gateway}"
   resource_id             = "${aws_api_gateway_resource.service.id}"
   http_method             = "${aws_api_gateway_method.service.http_method}"
-  uri                     = "${aws_lambda_function.status.invoke_arn}"
+  uri                     = "${aws_lambda_function.service.invoke_arn}"
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   content_handling        = "CONVERT_TO_TEXT"
 }
 
-resource "aws_api_gateway_deployment" "status" {
+resource "aws_api_gateway_deployment" "service" {
   depends_on = [
     "aws_api_gateway_method.service",
-    "aws_api_gateway_integration.status",
+    "aws_api_gateway_integration.service",
   ]
 
-  rest_api_id = "${aws_api_gateway_rest_api.service.id}"
-  stage_name  = "api"
+  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
+  stage_name  = "${var.service_name}"
+}
+
+resource "aws_lambda_permission" "service" {
+  statement_id  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-service-method"
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+  function_name = "${aws_lambda_function.service.function_name}"
+  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.api_gateway}/*/${aws_api_gateway_integration.service.integration_http_method}/*"
 }
