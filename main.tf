@@ -1024,7 +1024,7 @@ resource "aws_api_gateway_deployment" "service" {
   ]
 
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  stage_name  = "${var.service_name}-live"
+  stage_name  = "${var.service_name}_live"
 }
 
 resource "aws_api_gateway_method_settings" "service" {
