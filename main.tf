@@ -1034,3 +1034,10 @@ resource "aws_api_gateway_method_settings" "service" {
     logging_level   = "INFO"
   }
 }
+
+resource "aws_api_gateway_base_path_mapping" "service" {
+  api_id      = "${data.terraform_remote_state.env.api_gateway}"
+  stage_name  = "${aws_api_gateway_deployment.service.stage_name}"
+  domain_name = "${data.terraform_remote_state.env.private_zone_name}"
+  base_path   = "${var.service_name}"
+}
