@@ -247,5 +247,5 @@ output "kms_key_id" {
 }
 
 output "anchor" {
-  value = 0
+  value = "0"
 }
