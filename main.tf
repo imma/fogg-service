@@ -1030,8 +1030,9 @@ resource "aws_api_gateway_method_settings" "service" {
   method_path = "${aws_api_gateway_resource.service.path_part}/${aws_api_gateway_method.service.http_method}"
 
   settings {
-    metrics_enabled = true
-    logging_level   = "INFO"
+    metrics_enabled    = true
+    logging_level      = "INFO"
+    data_trace_enabled = true
   }
 }
 
