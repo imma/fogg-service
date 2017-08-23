@@ -367,7 +367,7 @@ resource "aws_instance" "service" {
 
 resource "aws_route53_record" "instance" {
   zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  name    = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   type    = "A"
   ttl     = "60"
   records = ["${element(aws_instance.service.*.private_ip,count.index)}"]
@@ -888,7 +888,7 @@ resource "packet_project" "service" {
 }
 
 resource "packet_device" "service" {
-  hostname         = "packet-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  hostname         = "packet-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   project_id       = "${packet_project.service.id}"
   facility         = "${var.packet_facility}"
   plan             = "${var.packet_plan}"
@@ -908,7 +908,7 @@ resource "packet_volume" "service" {
 
 resource "aws_route53_record" "packet_instance" {
   zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "packet-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  name    = "packet-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   type    = "A"
   ttl     = "60"
   records = ["${element(packet_device.service.*.network.0.address,count.index)}"]
@@ -916,14 +916,14 @@ resource "aws_route53_record" "packet_instance" {
 }
 
 resource "digitalocean_volume" "service" {
-  name   = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}-${data.terraform_remote_state.env.env_name}"
+  name   = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}-${data.terraform_remote_state.env.env_name}" /*"*/
   region = "${var.do_region}"
   size   = 40
   count  = "${var.want_digitalocean}"
 }
 
 resource "digitalocean_droplet" "service" {
-  name       = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  name       = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   ssh_keys   = ["${data.terraform_remote_state.env.do_ssh_key}"]
   region     = "${var.do_region}"
   image      = "ubuntu-16-04-x64"
@@ -933,7 +933,7 @@ resource "digitalocean_droplet" "service" {
 }
 
 resource "digitalocean_firewall" "service" {
-  name  = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  name  = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   count = "${signum(var.want_digitalocean*var.do_instance_count)}"
 
   droplet_ids = ["${digitalocean_droplet.service.*.id}"]
@@ -966,19 +966,14 @@ resource "digitalocean_firewall" "service" {
 
 resource "aws_route53_record" "do_instance" {
   zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+  name    = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   type    = "A"
   ttl     = "60"
   records = ["${digitalocean_droplet.service.*.ipv4_address[count.index]}"]
   count   = "${var.want_digitalocean*var.do_instance_count}"
 }
 
-resource "aws_api_gateway_resource" "service" {
-  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
-  path_part   = "live"
-}
-
+/* lambda */
 resource "aws_lambda_function" "service" {
   filename         = "src/service/deployment.zip"
   function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${var.service_name}"
@@ -987,6 +982,20 @@ resource "aws_lambda_function" "service" {
   runtime          = "python3.6"
   source_code_hash = "${base64sha256(file("src/service/deployment.zip"))}"
   publish          = true
+}
+
+/* resource */
+resource "aws_api_gateway_resource" "service" {
+  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
+  parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
+  path_part   = "${var.service_name}"
+}
+
+resource "aws_api_gateway_method" "service" {
+  rest_api_id   = "${data.terraform_remote_state.env.api_gateway}"
+  resource_id   = "${aws_api_gateway_resource.service.id}"
+  http_method   = "POST"
+  authorization = "NONE"
 }
 
 resource "aws_api_gateway_integration" "service" {
@@ -999,16 +1008,6 @@ resource "aws_api_gateway_integration" "service" {
   content_handling        = "CONVERT_TO_TEXT"
 }
 
-resource "aws_api_gateway_deployment" "service" {
-  depends_on = [
-    "aws_api_gateway_method.service",
-    "aws_api_gateway_integration.service",
-  ]
-
-  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  stage_name  = "${var.service_name}"
-}
-
 resource "aws_lambda_permission" "service" {
   statement_id  = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-service-method"
   action        = "lambda:InvokeFunction"
@@ -1017,17 +1016,21 @@ resource "aws_lambda_permission" "service" {
   source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.api_gateway}/*/${aws_api_gateway_integration.service.integration_http_method}/*"
 }
 
-resource "aws_api_gateway_method" "service" {
-  rest_api_id   = "${data.terraform_remote_state.env.api_gateway}"
-  resource_id   = "${aws_api_gateway_resource.service.id}"
-  http_method   = "POST"
-  authorization = "NONE"
+/* deployment */
+resource "aws_api_gateway_deployment" "service" {
+  depends_on = [
+    "aws_api_gateway_method.service",
+    "aws_api_gateway_integration.service",
+  ]
+
+  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
+  stage_name  = "${var.service-name}-live"
 }
 
 resource "aws_api_gateway_method_settings" "service" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
   stage_name  = "${aws_api_gateway_deployment.service.stage_name}"
-  method_path = "${aws_api_gateway_resource.service.path_part}/${aws_api_gateway_method.service.http_method}"
+  method_path = "*/*"
 
   settings {
     metrics_enabled    = true
