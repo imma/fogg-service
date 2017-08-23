@@ -997,7 +997,7 @@ resource "aws_lambda_function" "world" {
 resource "aws_api_gateway_integration" "hello" {
   rest_api_id             = "${data.terraform_remote_state.env.api_gateway}"
   resource_id             = "${aws_api_gateway_resource.hello.id}"
-  http_method             = "${aws_api_gateway_method.service.http_method}"
+  http_method             = "${aws_api_gateway_method.hello.http_method}"
   uri                     = "${aws_lambda_function.hello.invoke_arn}"
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
@@ -1007,7 +1007,7 @@ resource "aws_api_gateway_integration" "hello" {
 resource "aws_api_gateway_integration" "world" {
   rest_api_id             = "${data.terraform_remote_state.env.api_gateway}"
   resource_id             = "${aws_api_gateway_resource.world.id}"
-  http_method             = "${aws_api_gateway_method.service.http_method}"
+  http_method             = "${aws_api_gateway_method.hello.http_method}"
   uri                     = "${aws_lambda_function.world.invoke_arn}"
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
@@ -1019,7 +1019,7 @@ resource "aws_lambda_permission" "hello" {
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
   function_name = "${aws_lambda_function.hello.function_name}"
-  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.api_gateway}/*/${aws_api_gateway_integration.service.integration_http_method}/*"
+  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.api_gateway}/*/${aws_api_gateway_integration.hello.integration_http_method}/*"
 }
 
 resource "aws_lambda_permission" "world" {
@@ -1027,7 +1027,7 @@ resource "aws_lambda_permission" "world" {
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
   function_name = "${aws_lambda_function.world.function_name}"
-  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.api_gateway}/*/${aws_api_gateway_integration.service.integration_http_method}/*"
+  source_arn    = "arn:aws:execute-api:${var.env_region}:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.api_gateway}/*/${aws_api_gateway_integration.world.integration_http_method}/*"
 }
 
 resource "aws_api_gateway_resource" "hello" {
