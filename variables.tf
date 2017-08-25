@@ -30,6 +30,10 @@ variable "want_nat" {
   default = "0"
 }
 
+variable "want_nat_instance" {
+  default = "0"
+}
+
 variable "want_ipv6" {
   default = "0"
 }
@@ -249,4 +253,3 @@ output "kms_key_id" {
 output "api_gateway_resource" {
   value = "${aws_api_gateway_resource.service.id}"
 }
-
