@@ -156,7 +156,7 @@ resource "aws_route" "service_nat" {
 
 resource "aws_route" "service_vpn" {
   route_table_id         = "${element(aws_route_table.service.*.id,count.index)}"
-  destination_cidr_block = "10.8.0.0/0"
+  destination_cidr_block = "10.8.0.0/24"
   instance_id            = "${element(data.terraform_remote_state.env.vpn_instances,count.index)}"
   count                  = "${var.want_subnets*var.want_vpn*var.az_count}"
 }
