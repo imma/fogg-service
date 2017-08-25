@@ -158,7 +158,7 @@ resource "aws_route" "service_vpn" {
   route_table_id         = "${element(aws_route_table.service.*.id,count.index)}"
   destination_cidr_block = "10.8.0.0/24"
   instance_id            = "${element(data.terraform_remote_state.env.vpn_instances,count.index)}"
-  count                  = "${var.want_subnets*var.want_vpn*var.az_count}"
+  count                  = "${var.want_subnets*var.want_nat*var.want_vpn*var.az_count}"
 }
 
 resource "aws_route" "service_v6" {
@@ -205,6 +205,13 @@ resource "aws_route" "service_public" {
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = "${data.terraform_remote_state.env.igw_id}"
   count                  = "${var.want_subnets*var.az_count*signum(var.public_network)}"
+}
+
+resource "aws_route" "service_public_vpn" {
+  route_table_id         = "${element(aws_route_table.service_public.*.id,count.index)}"
+  destination_cidr_block = "10.8.0.0/24"
+  instance_id            = "${element(data.terraform_remote_state.env.vpn_instances,count.index)}"
+  count                  = "${var.want_subnets*var.az_count*signum(var.public_network)*var.want_vpn}"
 }
 
 resource "aws_route" "service_public_v6" {
