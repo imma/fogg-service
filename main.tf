@@ -173,6 +173,12 @@ resource "aws_vpc_endpoint_route_table_association" "s3_service" {
   count           = "${var.want_subnets*var.az_count*(signum(var.public_network)-1)*-1}"
 }
 
+resource "aws_vpc_endpoint_route_table_association" "dynamodb_service" {
+  vpc_endpoint_id = "${data.terraform_remote_state.env.dynamodb_endpoint_id}"
+  route_table_id  = "${element(aws_route_table.service.*.id,count.index)}"
+  count           = "${var.want_subnets*var.az_count*(signum(var.public_network)-1)*-1}"
+}
+
 resource "aws_route_table" "service_public" {
   vpc_id = "${data.aws_vpc.current.id}"
   count  = "${var.want_subnets*var.az_count*signum(var.public_network)}"
@@ -209,6 +215,12 @@ resource "aws_route_table_association" "service_public" {
 
 resource "aws_vpc_endpoint_route_table_association" "s3_service_public" {
   vpc_endpoint_id = "${data.terraform_remote_state.env.s3_endpoint_id}"
+  route_table_id  = "${element(aws_route_table.service_public.*.id,count.index)}"
+  count           = "${var.want_subnets*var.az_count*signum(var.public_network)}"
+}
+
+resource "aws_vpc_endpoint_route_table_association" "dynamodb_service_public" {
+  vpc_endpoint_id = "${data.terraform_remote_state.env.dynamodb_endpoint_id}"
   route_table_id  = "${element(aws_route_table.service_public.*.id,count.index)}"
   count           = "${var.want_subnets*var.az_count*signum(var.public_network)}"
 }
