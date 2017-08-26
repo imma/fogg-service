@@ -128,9 +128,11 @@ resource "aws_subnet" "service_v6" {
 }
 
 resource "aws_network_interface" "service" {
-  subnet_id   = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id)),count.index)}"
-  private_ips = ["${cidrhost(element(compact(concat(aws_subnet.service.*.cidr_block,aws_subnet.service_v6.*.cidr_block)),count.index),-2)}"]
-  count       = "${var.want_subnets*var.az_count*var.want_subnets}"
+  subnet_id = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id)),count.index)}"
+
+  #private_ips = ["${cidrhost(element(compact(concat(aws_subnet.service.*.cidr_block,aws_subnet.service_v6.*.cidr_block)),count.index),-2)}"]
+  private_ips_count = 1
+  count             = "${var.want_subnets*var.az_count*var.want_subnets}"
 
   tags {
     "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
