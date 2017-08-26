@@ -127,6 +127,42 @@ resource "aws_subnet" "service_v6" {
   }
 }
 
+resource "aws_network_interface" "service" {
+  subnet_id   = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id)),count.index)}"
+  private_ips = ["${cidrhost(element(compact(concat(aws_subnet.service.*.cidr_block,aws_subnet.service_v6.*.cidr_block)),count.index),-1)}"]
+  count       = "${var.want_subnets*var.az_count*var.want_subnets}"
+}
+
+resource "aws_network_interface_sg_attachment" "env" {
+  security_group_id    = "${data.terraform_remote_state.env.sg_env}"
+  network_interface_id = "${element(aws_network_interface.service.*.id,count.index)}"
+  count                = "${var.want_subnets*var.az_count*var.want_subnets}"
+}
+
+resource "aws_network_interface_sg_attachment" "env_private" {
+  security_group_id    = "${data.terraform_remote_state.env.sg_env_private}"
+  network_interface_id = "${element(aws_network_interface.service.*.id,count.index)}"
+  count                = "${var.want_subnets*var.az_count*var.want_subnets*signum(var.public_network - 1)*-1}"
+}
+
+resource "aws_network_interface_sg_attachment" "env_public" {
+  security_group_id    = "${data.terraform_remote_state.env.sg_env}"
+  network_interface_id = "${element(aws_network_interface.service.*.id,count.index)}"
+  count                = "${var.want_subnets*var.az_count*var.want_subnets*signum(var.public_network)}"
+}
+
+resource "aws_network_interface_sg_attachment" "app" {
+  security_group_id    = "${data.terraform_remote_state.app.app_sg}"
+  network_interface_id = "${element(aws_network_interface.service.*.id,count.index)}"
+  count                = "${var.want_subnets*var.az_count*var.want_subnets}"
+}
+
+resource "aws_network_interface_sg_attachment" "service" {
+  security_group_id    = "${aws_security_group.service.id}"
+  network_interface_id = "${element(aws_network_interface.service.*.id,count.index)}"
+  count                = "${var.want_subnets*var.az_count*var.want_subnets}"
+}
+
 resource "aws_route_table" "service" {
   vpc_id = "${data.aws_vpc.current.id}"
   count  = "${var.want_subnets*var.az_count*(signum(var.public_network)-1)*-1}"
