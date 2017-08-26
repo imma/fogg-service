@@ -129,8 +129,16 @@ resource "aws_subnet" "service_v6" {
 
 resource "aws_network_interface" "service" {
   subnet_id   = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id)),count.index)}"
-  private_ips = ["${cidrhost(element(compact(concat(aws_subnet.service.*.cidr_block,aws_subnet.service_v6.*.cidr_block)),count.index),-1)}"]
+  private_ips = ["${cidrhost(element(compact(concat(aws_subnet.service.*.cidr_block,aws_subnet.service_v6.*.cidr_block)),count.index),-2)}"]
   count       = "${var.want_subnets*var.az_count*var.want_subnets}"
+
+  tags {
+    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+    "Env"       = "${data.terraform_remote_state.env.env_name}"
+    "App"       = "${data.terraform_remote_state.app.app_name}"
+    "Service"   = "${var.service_name}"
+    "ManagedBy" = "terraform"
+  }
 }
 
 resource "aws_network_interface_sg_attachment" "env" {
