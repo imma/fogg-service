@@ -27,7 +27,7 @@ variable "want_efs" {
 }
 
 variable "want_vpn" {
-  default = "0"
+  default = "1"
 }
 
 variable "want_nat" {
@@ -35,7 +35,7 @@ variable "want_nat" {
 }
 
 variable "want_nat_instance" {
-  default = "0"
+  default = "1"
 }
 
 variable "want_ipv6" {
