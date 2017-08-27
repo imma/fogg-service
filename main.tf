@@ -156,7 +156,7 @@ resource "aws_network_interface_sg_attachment" "env_private" {
 }
 
 resource "aws_network_interface_sg_attachment" "env_public" {
-  security_group_id    = "${data.terraform_remote_state.env.sg_env}"
+  security_group_id    = "${data.terraform_remote_state.env.sg_env_public}"
   network_interface_id = "${element(aws_network_interface.service.*.id,count.index)}"
   count                = "${var.want_subnets*var.az_count*var.want_subnets*signum(var.public_network)}"
 }
