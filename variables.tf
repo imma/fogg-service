@@ -38,6 +38,10 @@ variable "want_nat_instance" {
   default = "1"
 }
 
+variable "want_nat_interface" {
+  default = "1"
+}
+
 variable "want_ipv6" {
   default = "0"
 }
