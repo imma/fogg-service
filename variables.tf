@@ -42,6 +42,10 @@ variable "want_nat_interface" {
   default = "1"
 }
 
+variable "nat_interface" {
+  default = ""
+}
+
 variable "want_ipv6" {
   default = "0"
 }

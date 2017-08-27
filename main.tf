@@ -203,7 +203,7 @@ resource "aws_route" "service_nat" {
 resource "aws_route" "service_interface_nat" {
   route_table_id         = "${element(aws_route_table.service.*.id,count.index)}"
   destination_cidr_block = "0.0.0.0/0"
-  network_interface_id   = "${element(data.terraform_remote_state.env.nat_interfaces,count.index)}"
+  network_interface_id   = "${coalesce(var.nat_interface,element(data.terraform_remote_state.env.nat_interfaces,count.index))}"
   count                  = "${var.want_subnets*var.want_nat_interface*var.az_count*(signum(var.public_network)-1)*-1}"
 }
 
