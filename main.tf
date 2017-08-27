@@ -203,7 +203,7 @@ resource "aws_route" "service_interface_nat" {
 resource "aws_route" "service_interface_vpn" {
   route_table_id         = "${element(aws_route_table.service.*.id,count.index)}"
   destination_cidr_block = "10.8.0.0/24"
-  instance_id            = "${element(data.terraform_remote_state.env.vpn_interfaces,count.index)}"
+  network_interface_id   = "${element(data.terraform_remote_state.env.vpn_interfaces,count.index)}"
   count                  = "${var.want_subnets*var.want_vpn*var.az_count*(signum(var.public_network)-1)*-1}"
 }
 
@@ -253,10 +253,10 @@ resource "aws_route" "service_public" {
   count                  = "${var.want_subnets*var.az_count*signum(var.public_network)}"
 }
 
-resource "aws_route" "service_public_vpn" {
+resource "aws_route" "service_public_interface_vpn" {
   route_table_id         = "${element(aws_route_table.service_public.*.id,count.index)}"
   destination_cidr_block = "10.8.0.0/24"
-  instance_id            = "${element(data.terraform_remote_state.env.vpn_instances,count.index)}"
+  network_interface_id   = "${element(data.terraform_remote_state.env.vpn_interfaces,count.index)}"
   count                  = "${var.want_subnets*var.az_count*signum(var.public_network)*var.want_vpn}"
 }
 
