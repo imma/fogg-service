@@ -6,10 +6,6 @@ variable "az_count" {}
 
 variable "service_name" {}
 
-variable "service_default" {
-  default = "0"
-}
-
 variable "display_name" {
   default = ""
 }

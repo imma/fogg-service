@@ -446,7 +446,7 @@ resource "aws_instance" "service" {
 
 resource "aws_route53_record" "instance" {
   zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
+  name    = "${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   type    = "A"
   ttl     = "60"
   records = ["${element(aws_instance.service.*.private_ip,count.index)}"]
@@ -495,21 +495,21 @@ resource "aws_launch_configuration" "service" {
 
 resource "aws_ses_domain_identity" "service" {
   provider = "aws.us_east_1"
-  domain   = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}.${data.terraform_remote_state.env.private_zone_name}"
+  domain   = "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"
 }
 
 resource "aws_ses_receipt_rule" "s3" {
   provider      = "aws.us_east_1"
-  name          = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}.${data.terraform_remote_state.env.private_zone_name}-s3"
+  name          = "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}-s3"
   rule_set_name = "${data.terraform_remote_state.org.domain_name}"
-  recipients    = ["${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}.${data.terraform_remote_state.env.private_zone_name}"]
+  recipients    = ["${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"]
   enabled       = true
   scan_enabled  = true
   tls_policy    = "Require"
 
   s3_action {
     bucket_name       = "${data.terraform_remote_state.env.s3_env_ses}"
-    object_key_prefix = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}.${data.terraform_remote_state.env.private_zone_name}"
+    object_key_prefix = "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"
     topic_arn         = "${aws_sns_topic.ses.arn}"
     position          = 1
   }
@@ -517,7 +517,7 @@ resource "aws_ses_receipt_rule" "s3" {
 
 resource "aws_route53_record" "verify_ses" {
   zone_id = "${data.terraform_remote_state.org.public_zone_id}"
-  name    = "_amazonses.${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}.${data.terraform_remote_state.env.private_zone_name}"
+  name    = "_amazonses.${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"
   type    = "TXT"
   ttl     = "60"
   records = ["${aws_ses_domain_identity.service.verification_token}"]
@@ -525,7 +525,7 @@ resource "aws_route53_record" "verify_ses" {
 
 resource "aws_route53_record" "mx" {
   zone_id = "${data.terraform_remote_state.org.public_zone_id}"
-  name    = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}.${data.terraform_remote_state.env.private_zone_name}"
+  name    = "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"
   type    = "MX"
   ttl     = "60"
   records = ["10 inbound-smtp.${var.env_region}.amazonaws.com"]
@@ -613,8 +613,7 @@ resource "aws_elb" "service" {
 }
 
 data "aws_acm_certificate" "service" {
-  provider = "aws.us_east_1"
-  domain   = "${(var.want_alb*var.asg_count) == 0 ? "cf.${data.terraform_remote_state.org.domain_name}" : "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}.${data.terraform_remote_state.env.private_zone_name}"}"
+  domain   = "${(var.want_alb*var.asg_count) == 0 ? "cf.${data.terraform_remote_state.org.domain_name}" : "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"}"
   statuses = ["ISSUED"]
 }
 
@@ -683,7 +682,7 @@ resource "aws_alb_target_group" "service" {
 
 resource "aws_route53_record" "service" {
   zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}-${element(var.asg_name,count.index)}.${data.terraform_remote_state.env.private_zone_name}"
+  name    = "${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}.${data.terraform_remote_state.env.private_zone_name}"
   type    = "A"
 
   alias {
@@ -693,34 +692,6 @@ resource "aws_route53_record" "service" {
   }
 
   count = "${var.asg_count*signum(var.want_elb+var.want_alb)}"
-}
-
-resource "aws_route53_record" "service_live" {
-  zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}.${data.terraform_remote_state.env.private_zone_name}"
-  type    = "A"
-
-  alias {
-    name                   = "${element(concat(aws_alb.service.*.dns_name,aws_elb.service.*.dns_name),0)}"
-    zone_id                = "${element(concat(aws_alb.service.*.zone_id,aws_elb.service.*.zone_id),0)}"
-    evaluate_target_health = false
-  }
-
-  count = "${signum(var.want_elb+var.want_alb)}"
-}
-
-resource "aws_route53_record" "service_staging" {
-  zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}-staging.${data.terraform_remote_state.env.private_zone_name}"
-  type    = "A"
-
-  alias {
-    name                   = "${element(concat(aws_alb.service.*.dns_name,aws_elb.service.*.dns_name),1)}"
-    zone_id                = "${element(concat(aws_alb.service.*.zone_id,aws_elb.service.*.zone_id),1)}"
-    evaluate_target_health = false
-  }
-
-  count = "${signum(var.asg_count - 1)*signum(var.want_elb+var.want_alb)}"
 }
 
 resource "aws_sns_topic" "service" {
@@ -967,7 +938,7 @@ resource "packet_project" "service" {
 }
 
 resource "packet_device" "service" {
-  hostname         = "packet-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
+  hostname         = "packet-${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   project_id       = "${packet_project.service.id}"
   facility         = "${var.packet_facility}"
   plan             = "${var.packet_plan}"
@@ -987,7 +958,7 @@ resource "packet_volume" "service" {
 
 resource "aws_route53_record" "packet_instance" {
   zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "packet-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
+  name    = "packet-${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   type    = "A"
   ttl     = "60"
   records = ["${element(packet_device.service.*.network.0.address,count.index)}"]
@@ -995,14 +966,14 @@ resource "aws_route53_record" "packet_instance" {
 }
 
 resource "digitalocean_volume" "service" {
-  name   = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}-${data.terraform_remote_state.env.env_name}" /*"*/
+  name   = "do-${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}-${data.terraform_remote_state.env.env_name}" /*"*/
   region = "${var.do_region}"
   size   = 40
   count  = "${var.want_digitalocean}"
 }
 
 resource "digitalocean_droplet" "service" {
-  name       = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
+  name       = "do-${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   ssh_keys   = ["${data.terraform_remote_state.env.do_ssh_key}"]
   region     = "${var.do_region}"
   image      = "ubuntu-16-04-x64"
@@ -1012,7 +983,7 @@ resource "digitalocean_droplet" "service" {
 }
 
 resource "digitalocean_firewall" "service" {
-  name  = "${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
+  name  = "${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   count = "${signum(var.want_digitalocean*var.do_instance_count)}"
 
   droplet_ids = ["${digitalocean_droplet.service.*.id}"]
@@ -1045,7 +1016,7 @@ resource "digitalocean_firewall" "service" {
 
 resource "aws_route53_record" "do_instance" {
   zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "do-${data.terraform_remote_state.app.app_name}${var.service_default == "1" ? "" : "-${var.service_name}"}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
+  name    = "do-${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
   type    = "A"
   ttl     = "60"
   records = ["${digitalocean_droplet.service.*.ipv4_address[count.index]}"]
