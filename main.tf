@@ -612,11 +612,6 @@ resource "aws_elb" "service" {
   }
 }
 
-data "aws_acm_certificate" "service" {
-  domain   = "${(var.want_alb*var.asg_count) == 0 ? "cf.${data.terraform_remote_state.org.domain_name}" : "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"}"
-  statuses = ["ISSUED"]
-}
-
 resource "aws_alb" "service" {
   name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count   = "${var.want_alb*var.asg_count}"
@@ -648,7 +643,7 @@ resource "aws_alb_listener" "service" {
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2015-05"
-  certificate_arn   = "${data.aws_acm_certificate.service.arn}"
+  certificate_arn   = "${data.terraform_remote_state.env.env_cert}"
 
   default_action {
     target_group_arn = "${element(aws_alb_target_group.service.*.arn,count.index)}"
