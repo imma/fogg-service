@@ -14,10 +14,6 @@ variable "public_network" {
   default = "0"
 }
 
-variable "public_lb" {
-  default = "0"
-}
-
 variable "want_efs" {
   default = "0"
 }
@@ -39,14 +35,6 @@ variable "want_nat_interface" {
 }
 
 variable "want_ipv6" {
-  default = "0"
-}
-
-variable "want_elb" {
-  default = "0"
-}
-
-variable "want_alb" {
   default = "0"
 }
 
@@ -144,34 +132,6 @@ output "asg_names" {
 
 output "service_name" {
   value = "${var.service_name}"
-}
-
-output "elb_names" {
-  value = ["${aws_elb.service.*.name}"]
-}
-
-output "elb_dns_names" {
-  value = ["${aws_elb.service.*.dns_name}"]
-}
-
-output "elb_zone_ids" {
-  value = ["${aws_elb.service.*.zone_id}"]
-}
-
-output "alb_names" {
-  value = ["${aws_alb.service.*.name}"]
-}
-
-output "alb_dns_names" {
-  value = ["${aws_alb.service.*.dns_name}"]
-}
-
-output "alb_zone_ids" {
-  value = ["${aws_alb.service.*.zone_id}"]
-}
-
-output "lb_sg" {
-  value = "${aws_security_group.lb.id}"
 }
 
 output "env_sg" {
