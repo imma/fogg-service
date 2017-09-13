@@ -493,23 +493,27 @@ resource "aws_launch_configuration" "service" {
   }
 }
 
+locals {
+  ses_domain = "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"
+}
+
 resource "aws_ses_domain_identity" "service" {
   provider = "aws.us_east_1"
-  domain   = "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"
+  domain   = "${local.ses_domain}"
 }
 
 resource "aws_ses_receipt_rule" "s3" {
   provider      = "aws.us_east_1"
-  name          = "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}-s3"
+  name          = "${local.ses_domain}"
   rule_set_name = "${data.terraform_remote_state.org.domain_name}"
-  recipients    = ["${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"]
+  recipients    = ["${local.ses_domain}"]
   enabled       = true
   scan_enabled  = true
   tls_policy    = "Require"
 
   s3_action {
     bucket_name       = "${data.terraform_remote_state.env.s3_env_ses}"
-    object_key_prefix = "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"
+    object_key_prefix = "${local.ses_domain}"
     topic_arn         = "${aws_sns_topic.ses.arn}"
     position          = 1
   }
@@ -517,7 +521,7 @@ resource "aws_ses_receipt_rule" "s3" {
 
 resource "aws_route53_record" "verify_ses" {
   zone_id = "${data.terraform_remote_state.org.public_zone_id}"
-  name    = "_amazonses.${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"
+  name    = "_amazonses.${local.ses_domain}"
   type    = "TXT"
   ttl     = "60"
   records = ["${aws_ses_domain_identity.service.verification_token}"]
@@ -525,7 +529,7 @@ resource "aws_route53_record" "verify_ses" {
 
 resource "aws_route53_record" "mx" {
   zone_id = "${data.terraform_remote_state.org.public_zone_id}"
-  name    = "${data.terraform_remote_state.app.app_name}-${var.service_name}.${data.terraform_remote_state.env.private_zone_name}"
+  name    = "${local.ses_domain}"
   type    = "MX"
   ttl     = "60"
   records = ["10 inbound-smtp.${var.env_region}.amazonaws.com"]
