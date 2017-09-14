@@ -514,7 +514,6 @@ resource "aws_ses_receipt_rule" "s3" {
   s3_action {
     bucket_name       = "${data.terraform_remote_state.env.s3_env_ses}"
     object_key_prefix = "${local.ses_domain}"
-    topic_arn         = "${aws_sns_topic.ses.arn}"
     position          = 1
   }
 }
@@ -581,68 +580,6 @@ resource "aws_sns_topic_subscription" "service" {
   endpoint  = "${element(aws_sqs_queue.service.*.arn,count.index)}"
   protocol  = "sqs"
   count     = "${var.asg_count}"
-}
-
-resource "aws_sns_topic" "ses" {
-  provider = "aws.us_east_1"
-  name     = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-ses"
-  policy   = "${element(data.aws_iam_policy_document.service-sns-ses.*.json,count.index)}"
-}
-
-data "aws_iam_policy_document" "service-sns-ses" {
-  statement {
-    actions = [
-      "SNS:Publish",
-    ]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ses.amazonaws.com"]
-    }
-
-    resources = [
-      "arn:aws:sns:us-east-1:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-ses",
-    ]
-  }
-}
-
-resource "aws_sqs_queue" "ses" {
-  provider = "aws.us_east_1"
-  name     = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-ses"
-  policy   = "${element(data.aws_iam_policy_document.service-sns-sqs-ses.*.json,count.index)}"
-}
-
-data "aws_iam_policy_document" "service-sns-sqs-ses" {
-  statement {
-    actions = [
-      "sqs:SendMessage",
-    ]
-
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-
-    resources = [
-      "arn:aws:sqs:us-east-1:${data.terraform_remote_state.org.aws_account_id}:${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-ses",
-    ]
-
-    condition {
-      test     = "ArnEquals"
-      variable = "aws:SourceArn"
-
-      values = [
-        "${element(aws_sns_topic.ses.*.arn,count.index)}",
-      ]
-    }
-  }
-}
-
-resource "aws_sns_topic_subscription" "ses" {
-  provider  = "aws.us_east_1"
-  topic_arn = "${element(aws_sns_topic.ses.*.arn,count.index)}"
-  endpoint  = "${element(aws_sqs_queue.ses.*.arn,count.index)}"
-  protocol  = "sqs"
 }
 
 resource "aws_ecs_cluster" "service" {
