@@ -200,6 +200,10 @@ output "public_ips" {
   value = ["${aws_instance.service.*.public_ip}"]
 }
 
+output "instance_ids" {
+  value = ["${aws_instance.service.*.id}"]
+}
+
 output "packet_project_id" {
   value = "${packet_project.service.id}"
 }
