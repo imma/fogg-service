@@ -130,16 +130,16 @@ variable "block" {
   default = "block-ubuntu"
 }
 
+variable "key_name" {
+  default = "default"
+}
+
 output "asg_names" {
   value = ["${aws_autoscaling_group.service.*.name}"]
 }
 
 output "service_name" {
   value = "${var.service_name}"
-}
-
-output "key_name" {
-  default = "default"
 }
 
 output "env_sg" {
@@ -159,7 +159,7 @@ output "service_subnets" {
 }
 
 output "key_name" {
-  value = "${data.terraform_remote_state.env.key_name}"
+  value = "${var.key_name}"
 }
 
 output "service_sqs" {
