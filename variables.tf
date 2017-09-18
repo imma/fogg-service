@@ -138,6 +138,10 @@ output "service_name" {
   value = "${var.service_name}"
 }
 
+output "key_name" {
+  default = "default"
+}
+
 output "env_sg" {
   value = "${data.terraform_remote_state.env.sg_env}"
 }
