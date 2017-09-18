@@ -79,7 +79,7 @@ resource "aws_subnet" "service" {
 
   availability_zone = "${element(data.aws_availability_zones.azs.names,count.index)}"
 
-  cidr_block              = "${cidrsubnet(data.aws_vpc.current.cidr_block,var.service_bits,element(concat(split(" ",lookup(var,"service_${data.terraform_remote_state.app.app_name}_${var.service_name}","")),split(" ",lookup(var,"service_${var.service_name}",""))),count.index))}"
+  cidr_block              = "${cidrsubnet(data.aws_vpc.current.cidr_block,var.service_bits,element(concat(split(" ",lookup(var.service,"${data.terraform_remote_state.app.app_name}_${var.service_name}","")),split(" ",lookup(var.service,var.service_name,""))),count.index))}"
   map_public_ip_on_launch = "${signum(var.public_network) == 1 ? "true" : "false"}"
 
   count = "${var.want_subnets*var.az_count*(var.want_ipv6 - 1)*-1}"
@@ -102,11 +102,8 @@ resource "aws_subnet" "service_v6" {
 
   availability_zone = "${element(data.aws_availability_zones.azs.names,count.index)}"
 
-  cidr_block              = "${cidrsubnet(data.aws_vpc.current.cidr_block,var.service_bits,element(concat(split(" ",lookup(var,"service_${data.terraform_remote_state.app.app_name}_${var.service_name}","")),split(" ",lookup(var,"service_${var.service_name}",""))),count.index))}"
+  cidr_block              = "${cidrsubnet(data.aws_vpc.current.cidr_block,var.service_bits,element(concat(split(" ",lookup(var.service,"${data.terraform_remote_state.app.app_name}_${var.service_name}","")),split(" ",lookup(var.service,var.service_name,""))),count.index))}"
   map_public_ip_on_launch = "${signum(var.public_network) == 1 ? "true" : "false"}"
-
-  ipv6_cidr_block                 = "${cidrsubnet(data.aws_vpc.current.ipv6_cidr_block,8,element(concat(split(" ",lookup(var,"service_v6_${data.terraform_remote_state.app.app_name}_${var.service_name}","")),split(" ",lookup(var,"service_v6_${var.service_name}",""))),count.index))}"
-  assign_ipv6_address_on_creation = true
 
   count = "${var.want_subnets*var.az_count*var.want_ipv6}"
 
