@@ -437,15 +437,6 @@ resource "aws_instance" "service" {
   }
 }
 
-resource "aws_route53_record" "instance" {
-  zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
-  type    = "A"
-  ttl     = "60"
-  records = ["${element(aws_instance.service.*.private_ip,count.index)}"]
-  count   = "${var.instance_count}"
-}
-
 resource "aws_launch_configuration" "service" {
   name_prefix          = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}-"
   instance_type        = "${element(var.instance_type,count.index)}"
