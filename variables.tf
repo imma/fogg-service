@@ -86,9 +86,7 @@ variable "user_data" {
   default = "module/init/user-data.template"
 }
 
-variable "service_bits" {
-  default = "12"
-}
+variable "service_bits" {}
 
 variable "instance_count" {
   default = 0
