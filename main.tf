@@ -410,6 +410,7 @@ resource "aws_spot_fleet_request" "service" {
   allocation_strategy = "diversified"
   target_capacity     = 1
   valid_until         = "2999-01-01T00:00:00Z"
+  spot_price          = "0.001"
 
   launch_specification {
     spot_price             = "0.002"
