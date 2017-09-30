@@ -100,6 +100,10 @@ variable "asg_count" {
   default = 1
 }
 
+variable "sf_count" {
+  default = 0
+}
+
 variable "asg_name" {
   default = ["live", "rc"]
 }
