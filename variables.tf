@@ -96,8 +96,12 @@ variable "asg_count" {
   default = 1
 }
 
+variable "sf_count" {
+  default = 1
+}
+
 variable "asg_name" {
-  default = ["live"]
+  default = ["live", "rc"]
 }
 
 variable "instance_type" {
