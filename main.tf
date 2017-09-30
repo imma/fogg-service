@@ -407,14 +407,13 @@ resource "aws_instance" "service" {
 
 resource "aws_spot_fleet_request" "service" {
   iam_fleet_role      = "${aws_iam_role.service.arn}"
-  spot_price          = "0.002"
   allocation_strategy = "diversified"
   target_capacity     = 1
   valid_until         = "2999-01-01T00:00:00Z"
 
   launch_specification {
     spot_price             = "0.002"
-    instance_type          = "t2.nano"
+    instance_type          = "c4.large"
     instance_type          = "${element(var.instance_type,count.index)}"
     ami                    = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
     key_name               = "${var.key_name}"
