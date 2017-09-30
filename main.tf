@@ -415,7 +415,6 @@ resource "aws_spot_fleet_request" "service" {
   launch_specification {
     spot_price             = "0.002"
     instance_type          = "c4.large"
-    instance_type          = "${element(var.instance_type,count.index)}"
     ami                    = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
     key_name               = "${var.key_name}"
     user_data              = "${data.template_file.user_data_service.rendered}"
