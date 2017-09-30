@@ -415,21 +415,53 @@ resource "aws_spot_fleet_request" "service" {
   launch_specification {
     spot_price             = "${var.spot_price_sf}"
     instance_type          = "${var.instance_type_sf}"
-    ami                    = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
+    ami                    = "${coalesce(element(var.ami_id,0),data.aws_ami.block.image_id)}"
     key_name               = "${var.key_name}"
     user_data              = "${data.template_file.user_data_service.rendered}"
     subnet_id              = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets))),count.index)}"
-    availability_zone      = "${element(data.aws_availability_zones.azs.names,count.index)}"
     vpc_security_group_ids = ["${concat(list(data.terraform_remote_state.env.sg_env,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
     iam_instance_profile   = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+    availability_zone      = "${element(data.aws_availability_zones.azs.names,0)}"
 
     root_block_device {
       volume_type = "gp2"
-      volume_size = "${element(var.root_volume_size,count.index)}"
+      volume_size = "${element(var.root_volume_size,0)}"
     }
   }
 
-  count = "${var.sf_count}"
+  launch_specification {
+    spot_price             = "${var.spot_price_sf}"
+    instance_type          = "${var.instance_type_sf}"
+    ami                    = "${coalesce(element(var.ami_id,0),data.aws_ami.block.image_id)}"
+    key_name               = "${var.key_name}"
+    user_data              = "${data.template_file.user_data_service.rendered}"
+    subnet_id              = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets))),count.index)}"
+    vpc_security_group_ids = ["${concat(list(data.terraform_remote_state.env.sg_env,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
+    iam_instance_profile   = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+    availability_zone      = "${element(data.aws_availability_zones.azs.names,1)}"
+
+    root_block_device {
+      volume_type = "gp2"
+      volume_size = "${element(var.root_volume_size,0)}"
+    }
+  }
+
+  launch_specification {
+    spot_price             = "${var.spot_price_sf}"
+    instance_type          = "${var.instance_type_sf}"
+    ami                    = "${coalesce(element(var.ami_id,0),data.aws_ami.block.image_id)}"
+    key_name               = "${var.key_name}"
+    user_data              = "${data.template_file.user_data_service.rendered}"
+    subnet_id              = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets))),count.index)}"
+    vpc_security_group_ids = ["${concat(list(data.terraform_remote_state.env.sg_env,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
+    iam_instance_profile   = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+    availability_zone      = "${element(data.aws_availability_zones.azs.names,2)}"
+
+    root_block_device {
+      volume_type = "gp2"
+      volume_size = "${element(var.root_volume_size,0)}"
+    }
+  }
 }
 
 resource "aws_launch_configuration" "service" {
