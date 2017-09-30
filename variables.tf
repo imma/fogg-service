@@ -92,12 +92,16 @@ variable "instance_count" {
   default = 0
 }
 
+variable "instance_count_sf" {
+  default = 0
+}
+
 variable "asg_count" {
   default = 1
 }
 
 variable "sf_count" {
-  default = 1
+  default = 0
 }
 
 variable "asg_name" {
@@ -106,6 +110,14 @@ variable "asg_name" {
 
 variable "instance_type" {
   default = ["t2.nano"]
+}
+
+variable "instance_type_sf" {
+  default = "c4.large"
+}
+
+variable "spot_price_sf" {
+  default = "0.002"
 }
 
 variable "ami_id" {

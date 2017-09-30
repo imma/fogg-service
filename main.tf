@@ -408,13 +408,13 @@ resource "aws_instance" "service" {
 resource "aws_spot_fleet_request" "service" {
   iam_fleet_role      = "arn:aws:iam::${data.terraform_remote_state.org.aws_account_id}:role/aws-ec2-spot-fleet-tagging-role"
   allocation_strategy = "diversified"
-  target_capacity     = 1
+  target_capacity     = "${var.instance_count_sf}"
   valid_until         = "2999-01-01T00:00:00Z"
   spot_price          = "0.001"
 
   launch_specification {
-    spot_price             = "0.002"
-    instance_type          = "c4.large"
+    spot_price             = "${var.spot_price_sf}"
+    instance_type          = "${var.instance_type_sf}"
     ami                    = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
     key_name               = "${var.key_name}"
     user_data              = "${data.template_file.user_data_service.rendered}"
