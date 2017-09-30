@@ -410,10 +410,9 @@ resource "aws_spot_fleet_request" "service" {
   allocation_strategy = "diversified"
   target_capacity     = "${var.instance_count_sf}"
   valid_until         = "2999-01-01T00:00:00Z"
-  spot_price          = "0.001"
+  spot_price             = "${var.spot_price_sf}"
 
   launch_specification {
-    spot_price             = "${var.spot_price_sf}"
     instance_type          = "${var.instance_type_sf}"
     ami                    = "${coalesce(element(var.ami_id,0),data.aws_ami.block.image_id)}"
     key_name               = "${var.key_name}"
@@ -430,7 +429,6 @@ resource "aws_spot_fleet_request" "service" {
   }
 
   launch_specification {
-    spot_price             = "${var.spot_price_sf}"
     instance_type          = "${var.instance_type_sf}"
     ami                    = "${coalesce(element(var.ami_id,0),data.aws_ami.block.image_id)}"
     key_name               = "${var.key_name}"
@@ -447,7 +445,6 @@ resource "aws_spot_fleet_request" "service" {
   }
 
   launch_specification {
-    spot_price             = "${var.spot_price_sf}"
     instance_type          = "${var.instance_type_sf}"
     ami                    = "${coalesce(element(var.ami_id,0),data.aws_ami.block.image_id)}"
     key_name               = "${var.key_name}"
