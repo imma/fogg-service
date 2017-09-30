@@ -406,7 +406,7 @@ resource "aws_instance" "service" {
 }
 
 resource "aws_spot_fleet_request" "service" {
-  iam_fleet_role      = "${aws_iam_role.service.arn}"
+  iam_fleet_role      = "arn:aws:iam::${data.terraform_remote_state.org.aws_account_id}:role/aws-ec2-spot-fleet-tagging-role"
   allocation_strategy = "diversified"
   target_capacity     = 1
   valid_until         = "2999-01-01T00:00:00Z"
@@ -421,6 +421,7 @@ resource "aws_spot_fleet_request" "service" {
     subnet_id              = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets))),count.index)}"
     availability_zone      = "${element(data.aws_availability_zones.azs.names,count.index)}"
     vpc_security_group_ids = ["${concat(list(data.terraform_remote_state.env.sg_env,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
+    iam_instance_profile   = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
 
     root_block_device {
       volume_type = "gp2"
