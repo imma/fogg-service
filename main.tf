@@ -411,16 +411,16 @@ resource "aws_spot_fleet_request" "service" {
   allocation_strategy = "diversified"
   target_capacity     = 1
   valid_until         = "29999-99-00T00:00:00Z"
+  security_groups     = ["${concat(list(data.terraform_remote_state.env.sg_env,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
 
   launch_specification {
-    spot_price      = "0.002"
-    instance_type   = "t2.nano"
-    instance_type   = "${element(var.instance_type,count.index)}"
-    ami             = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
-    key_name        = "${var.key_name}"
-    user_data       = "${data.template_file.user_data_service.rendered}"
-    security_groups = ["${concat(list(data.terraform_remote_state.env.sg_env,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
-    subnet_id       = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets))),count.index)}"
+    spot_price    = "0.002"
+    instance_type = "t2.nano"
+    instance_type = "${element(var.instance_type,count.index)}"
+    ami           = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
+    key_name      = "${var.key_name}"
+    user_data     = "${data.template_file.user_data_service.rendered}"
+    subnet_id     = "${element(compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets))),count.index)}"
 
     root_block_device {
       volume_type = "gp2"
