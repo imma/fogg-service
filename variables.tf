@@ -204,6 +204,14 @@ output "region" {
   value = "${var.env_region}"
 }
 
+output "aws_region__" {
+  value = "${var.env_region}"
+}
+
+output "aws_default_region__" {
+  value = "${var.env_region}"
+}
+
 output "role" {
   value = "${aws_iam_role.service.arn}"
 }
