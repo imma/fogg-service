@@ -6,8 +6,6 @@ variable "service" {
   default = {}
 }
 
-variable "remote_region" { }
-
 variable "az_count" {}
 
 variable "service_name" {}
@@ -204,14 +202,6 @@ output "route_tables" {
 
 output "region" {
   value = "${var.env_region}"
-}
-
-output "aws_region__" {
-  value = "${var.remote_region}"
-}
-
-output "aws_default_region__" {
-  value = "${var.remote_region}"
 }
 
 output "role" {
