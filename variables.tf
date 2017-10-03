@@ -6,6 +6,8 @@ variable "service" {
   default = {}
 }
 
+variable "remote_region" { }
+
 variable "az_count" {}
 
 variable "service_name" {}
@@ -14,7 +16,7 @@ variable "display_name" {
   default = ""
 }
 
-variable "public_network" {
+eariable "public_network" {
   default = "0"
 }
 
