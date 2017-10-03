@@ -205,11 +205,11 @@ output "region" {
 }
 
 output "aws_region__" {
-  value = "${var.env_region}"
+  value = "${var.remote_region}"
 }
 
 output "aws_default_region__" {
-  value = "${var.env_region}"
+  value = "${var.remote_region}"
 }
 
 output "role" {
