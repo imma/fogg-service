@@ -16,7 +16,7 @@ variable "display_name" {
   default = ""
 }
 
-eariable "public_network" {
+variable "public_network" {
   default = "0"
 }
 
