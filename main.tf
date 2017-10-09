@@ -802,7 +802,7 @@ resource "aws_api_gateway_resource" "service" {
 }
 
 resource "aws_elasticache_cluster" "service" {
-  name                 = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+  cluster_id           = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
   engine               = "redis"
   engine_version       = "3.2.4"
   node_type            = "cache.t2.micro"
