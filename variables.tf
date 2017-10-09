@@ -18,6 +18,10 @@ variable "public_network" {
   default = "0"
 }
 
+variable "want_elasticache" {
+  default = "0"
+}
+
 variable "want_efs" {
   default = "0"
 }

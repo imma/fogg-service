@@ -74,6 +74,22 @@ resource "aws_security_group" "service" {
   }
 }
 
+resource "aws_security_group" "elasticache" {
+  name        = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-elasticache"
+  description = "Elasticache ${data.terraform_remote_state.app.app_name}-${var.service_name}"
+  vpc_id      = "${data.aws_vpc.current.id}"
+
+  tags {
+    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-elasticache"
+    "Env"       = "${data.terraform_remote_state.env.env_name}"
+    "App"       = "${data.terraform_remote_state.app.app_name}"
+    "Service"   = "${var.service_name}-elasticache"
+    "ManagedBy" = "terraform"
+  }
+
+  count = "${var.want_elasticache}"
+}
+
 resource "aws_subnet" "service" {
   vpc_id = "${data.aws_vpc.current.id}"
 
@@ -768,7 +784,11 @@ resource "digitalocean_firewall" "service" {
 
 resource "aws_route53_record" "do_instance" {
   zone_id = "${data.terraform_remote_state.env.private_zone_id}"
-  name    = "do-${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}" /*"*/
+
+  name = "do-${data.terraform_remote_state.app.app_name}-${var.service_name}${count.index+1}.${data.terraform_remote_state.env.private_zone_name}"
+
+  /*"*/
+
   type    = "A"
   ttl     = "60"
   records = ["${digitalocean_droplet.service.*.ipv4_address[count.index]}"]
@@ -779,4 +799,46 @@ resource "aws_api_gateway_resource" "service" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
   parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
   path_part   = "${var.service_name}"
+}
+
+resource "aws_elasticache_cluster" "service" {
+  name                 = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+  engine               = "redis"
+  engine_version       = "3.2.4"
+  node_type            = "cache.t2.micro"
+  port                 = 6379
+  num_cache_nodes      = 1
+  parameter_group_name = "${aws_elasticache_parameter_group.service.name}"
+  subnet_group_name    = "${aws_elasticache_subnet_group.service.name}"
+  security_group_ids   = ["${aws_security_group.elasticache.id}"]
+  availability_zone    = "${element(data.aws_availability_zones.azs.names,0)}"
+
+  tags {
+    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-elasticache"
+    "Env"       = "${data.terraform_remote_state.env.env_name}"
+    "App"       = "${data.terraform_remote_state.app.app_name}"
+    "Service"   = "${var.service_name}-elasticache"
+    "ManagedBy" = "terraform"
+  }
+
+  count = "${var.want_elasticache}"
+}
+
+resource "aws_elasticache_parameter_group" "service" {
+  name   = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+  family = "redis3.2"
+
+  parameter {
+    name  = "activerehashing"
+    value = "yes"
+  }
+
+  count = "${var.want_elasticache}"
+}
+
+resource "aws_elasticache_subnet_group" "service" {
+  name       = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+  subnet_ids = ["${compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets)))}"]
+
+  count = "${var.want_elasticache}"
 }
