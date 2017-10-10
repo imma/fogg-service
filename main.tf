@@ -849,10 +849,67 @@ resource "aws_route53_record" "do_instance" {
   count   = "${var.want_digitalocean*var.do_instance_count}"
 }
 
+data "aws_iam_policy_document" "fn" {
+  statement {
+    actions = [
+      "sts:AssumeRole",
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "fn" {
+  name               = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-fn"
+  assume_role_policy = "${data.aws_iam_policy_document.fn.json}"
+}
+
+locals {
+  deployment_zip  = ["${split("/","${path.module}/dist/deployment.zip")}"]
+  deployment_file = "${join("/",slice(local.deployment_zip,length(local.deployment_zip)-5,length(local.deployment_zip)))}"
+}
+
+resource "aws_lambda_function" "service" {
+  filename         = "${local.deployment_file}"
+  function_name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
+  role             = "${aws_iam_role.fn.arn}"
+  handler          = "app.app"
+  runtime          = "python3.6"
+  source_code_hash = "${base64sha256(file("${local.deployment_file}"))}"
+  publish          = true
+
+  lifecycle {
+    ignore_changes = ["source_code_hash", "filename"]
+  }
+}
+
+module "fn_service" {
+  source           = "git@github.com:imma/fogg-api-gateway//module/fn"
+  function_name    = "${aws_lambda_function.service.function_name}"
+  function_arn     = "${aws_lambda_function.service.arn}"
+  function_version = "${aws_lambda_function.service.version}"
+  source_arn       = "arn:aws:execute-api:${var.env_region}:${data.aws_caller_identity.current.account_id}:${data.terraform_remote_state.env.api_gateway}/*/*/*"
+  unique_prefix    = "${data.terraform_remote_state.env.api_gateway}-${aws_api_gateway_resource.service.id}"
+}
+
 resource "aws_api_gateway_resource" "service" {
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
   parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
   path_part   = "${var.service_name}"
+}
+
+module "resource_service" {
+  source = "git@github.com:imma/fogg-api-gateway//module/resource"
+
+  http_method = "POST"
+  api_name    = "${var.service_name}"
+  invoke_arn  = "${aws_lambda_function.service.invoke_arn}"
+
+  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
+  resource_id = "${aws_api_gateway_resource.service.id}"
 }
 
 resource "aws_elasticache_cluster" "service" {
