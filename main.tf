@@ -892,13 +892,7 @@ module "fn_service" {
   function_arn     = "${aws_lambda_function.service.arn}"
   function_version = "${aws_lambda_function.service.version}"
   source_arn       = "arn:aws:execute-api:${var.env_region}:${data.aws_caller_identity.current.account_id}:${data.terraform_remote_state.env.api_gateway}/*/*/*"
-  unique_prefix    = "${data.terraform_remote_state.env.api_gateway}-${aws_api_gateway_resource.service.id}"
-}
-
-resource "aws_api_gateway_resource" "service" {
-  rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  parent_id   = "${data.terraform_remote_state.env.api_gateway_resource}"
-  path_part   = "${var.service_name}"
+  unique_prefix    = "${data.terraform_remote_state.env.api_gateway}-${data.terraform_remote_state.env.api_gateway_resource}"
 }
 
 module "resource_service" {
@@ -909,7 +903,7 @@ module "resource_service" {
   invoke_arn  = "${aws_lambda_function.service.invoke_arn}"
 
   rest_api_id = "${data.terraform_remote_state.env.api_gateway}"
-  resource_id = "${aws_api_gateway_resource.service.id}"
+  resource_id = "${data.terraform_remote_state.env.api_gateway_resource}"
 }
 
 resource "aws_elasticache_cluster" "service" {
