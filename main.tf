@@ -829,7 +829,7 @@ resource "aws_elasticache_cluster" "service" {
   num_cache_nodes      = 1
   parameter_group_name = "${aws_elasticache_parameter_group.service.name}"
   subnet_group_name    = "${aws_elasticache_subnet_group.service.name}"
-  security_group_ids   = ["${aws_security_group.elasticache.id}"]
+  security_group_ids   = ["${aws_security_group.cache.id}"]
 
   tags {
     "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-cache"
