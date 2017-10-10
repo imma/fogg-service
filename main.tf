@@ -358,6 +358,37 @@ data "aws_ami" "block" {
   owners = ["self"]
 }
 
+data "aws_ami" "amazon" {
+  most_recent = true
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-2017.*"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "block-device-mapping.volume-type"
+    values = ["gp2"]
+  }
+
+  owners = ["137112412989"]
+}
+
 resource "aws_instance" "service" {
   ami           = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
   instance_type = "${element(var.instance_type,count.index)}"
