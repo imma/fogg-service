@@ -74,16 +74,16 @@ resource "aws_security_group" "service" {
   }
 }
 
-resource "aws_security_group" "elasticache" {
-  name        = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-elasticache"
-  description = "Elasticache ${data.terraform_remote_state.app.app_name}-${var.service_name}"
+resource "aws_security_group" "cache" {
+  name        = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-cache"
+  description = "Cache ${data.terraform_remote_state.app.app_name}-${var.service_name}"
   vpc_id      = "${data.aws_vpc.current.id}"
 
   tags {
-    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-elasticache"
+    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-cache"
     "Env"       = "${data.terraform_remote_state.env.env_name}"
     "App"       = "${data.terraform_remote_state.app.app_name}"
-    "Service"   = "${var.service_name}-elasticache"
+    "Service"   = "${var.service_name}-cache"
     "ManagedBy" = "terraform"
   }
 
@@ -671,10 +671,20 @@ resource "aws_route53_record" "efs" {
   count   = "${var.want_efs}"
 }
 
+resource "aws_security_group_rule" "allow_redis" {
+  type                     = "ingress"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "tcp"
+  source_security_group_id = "${aws_security_group.service.id}"
+  security_group_id        = "${aws_security_group.cache.id}"
+  count                    = "${var.want_elasticache}"
+}
+
 resource "aws_route53_record" "cache" {
   zone_id = "${data.terraform_remote_state.env.private_zone_id}"
   name    = "${data.terraform_remote_state.app.app_name}-${var.service_name}-cache.${data.terraform_remote_state.env.private_zone_name}"
-  type    = "A"
+  type    = "CNAME"
   ttl     = "60"
   records = ["${aws_elasticache_cluster.service.cache_nodes.0.address}"]
   count   = "${var.want_elasticache}"
@@ -822,10 +832,10 @@ resource "aws_elasticache_cluster" "service" {
   security_group_ids   = ["${aws_security_group.elasticache.id}"]
 
   tags {
-    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-elasticache"
+    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-cache"
     "Env"       = "${data.terraform_remote_state.env.env_name}"
     "App"       = "${data.terraform_remote_state.app.app_name}"
-    "Service"   = "${var.service_name}-elasticache"
+    "Service"   = "${var.service_name}-cache"
     "ManagedBy" = "terraform"
   }
 
