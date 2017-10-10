@@ -824,7 +824,7 @@ resource "aws_elasticache_cluster" "service" {
 }
 
 resource "aws_elasticache_parameter_group" "service" {
-  name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${timestamp}"
+  name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${timestamp()}"
 
   family = "redis3.2"
 
