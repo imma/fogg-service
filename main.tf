@@ -811,7 +811,6 @@ resource "aws_elasticache_cluster" "service" {
   parameter_group_name = "${aws_elasticache_parameter_group.service.name}"
   subnet_group_name    = "${aws_elasticache_subnet_group.service.name}"
   security_group_ids   = ["${aws_security_group.elasticache.id}"]
-  availability_zone    = "${element(data.aws_availability_zones.azs.names,0)}"
 
   tags {
     "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-elasticache"
@@ -827,11 +826,6 @@ resource "aws_elasticache_cluster" "service" {
 resource "aws_elasticache_parameter_group" "service" {
   name   = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
   family = "redis3.2"
-
-  parameter {
-    name  = "activerehashing"
-    value = "yes"
-  }
 
   count = "${var.want_elasticache}"
 }
