@@ -671,6 +671,15 @@ resource "aws_route53_record" "efs" {
   count   = "${var.want_efs}"
 }
 
+resource "aws_route53_record" "cache" {
+  zone_id = "${data.terraform_remote_state.env.private_zone_id}"
+  name    = "${data.terraform_remote_state.app.app_name}-${var.service_name}-cache.${data.terraform_remote_state.env.private_zone_name}"
+  type    = "A"
+  ttl     = "60"
+  records = ["${aws_elasticache_cluster.service.cache_nodes.0.address}"]
+  count   = "${var.want_elasticache}"
+}
+
 resource "aws_kms_key" "service" {
   description         = "Service ${var.service_name}"
   enable_key_rotation = true
