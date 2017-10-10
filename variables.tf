@@ -152,6 +152,10 @@ variable "key_name" {
   default = "default"
 }
 
+variable "amazon_linux" {
+  default = false
+}
+
 output "asg_names" {
   value = ["${aws_autoscaling_group.service.*.name}"]
 }

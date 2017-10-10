@@ -389,8 +389,12 @@ data "aws_ami" "amazon" {
   owners = ["137112412989"]
 }
 
+locals {
+  vendor_ami_id = "${var.amazon_linux ? data.aws_ami.amazon.image_id : data.aws_ami.block.image_id}"
+}
+
 resource "aws_instance" "service" {
-  ami           = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
+  ami           = "${coalesce(element(var.ami_id,count.index),local.vendor_ami_id)}"
   instance_type = "${element(var.instance_type,count.index)}"
   count         = "${var.instance_count}"
 
@@ -462,7 +466,7 @@ resource "aws_spot_fleet_request" "service" {
 
   launch_specification {
     instance_type          = "${var.instance_type_sf}"
-    ami                    = "${coalesce(element(var.ami_id,0),data.aws_ami.block.image_id)}"
+    ami                    = "${coalesce(element(var.ami_id,0),local.vendor_ami_id)}"
     key_name               = "${var.key_name}"
     user_data              = "${data.template_file.user_data_service.rendered}"
     vpc_security_group_ids = ["${concat(list(data.terraform_remote_state.env.sg_env,aws_security_group.service.id),list(data.terraform_remote_state.app.app_sg))}"]
@@ -480,7 +484,7 @@ resource "aws_spot_fleet_request" "service" {
 resource "aws_launch_configuration" "service" {
   name_prefix          = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}-"
   instance_type        = "${element(var.instance_type,count.index)}"
-  image_id             = "${coalesce(element(var.ami_id,count.index),data.aws_ami.block.image_id)}"
+  image_id             = "${coalesce(element(var.ami_id,count.index),local.vendor_ami_id)}"
   iam_instance_profile = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
   key_name             = "${var.key_name}"
   user_data            = "${data.template_file.user_data_service.rendered}"
