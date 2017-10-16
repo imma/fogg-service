@@ -983,7 +983,7 @@ resource "aws_lb_target_group" "service" {
   name     = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count    = "${var.want_nlb*var.asg_count}"
   port     = 443
-  protocol = "HTTPS"
+  protocol = "TCP"
   vpc_id   = "${data.aws_vpc.current.id}"
 }
 
