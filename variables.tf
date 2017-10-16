@@ -22,6 +22,14 @@ variable "want_elasticache" {
   default = "0"
 }
 
+variable "public_lb" {
+  default = "0"
+}
+
+variable "want_nlb" {
+  default = "0"
+}
+
 variable "want_efs" {
   default = "0"
 }

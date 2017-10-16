@@ -621,6 +621,7 @@ resource "aws_autoscaling_group" "service" {
   min_size             = "${element(var.min_size,count.index)}"
   max_size             = "${element(var.max_size,count.index)}"
   termination_policies = ["${var.termination_policies}"]
+  target_group_arns    = ["${compact(list(element(concat(aws_lb_target_group.service.*.arn,list("","")),count.index)))}"]
   count                = "${var.asg_count}"
 
   tag {
@@ -945,4 +946,104 @@ resource "aws_elasticache_subnet_group" "service" {
   subnet_ids = ["${compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets)))}"]
 
   count = "${var.want_elasticache}"
+}
+
+resource "aws_security_group" "lb" {
+  name        = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-lb"
+  description = "LB ${data.terraform_remote_state.app.app_name}-${var.service_name}"
+  vpc_id      = "${data.aws_vpc.current.id}"
+  count       = "${signum(var.want_nlb)}"
+
+  tags {
+    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-lb"
+    "Env"       = "${data.terraform_remote_state.env.env_name}"
+    "App"       = "${data.terraform_remote_state.app.app_name}-lb"
+    "Service"   = "${var.service_name}"
+    "ManagedBy" = "terraform"
+  }
+}
+
+resource "aws_security_group_rule" "lb_to_service" {
+  type                     = "ingress"
+  from_port                = 32768
+  to_port                  = 65535
+  protocol                 = "tcp"
+  source_security_group_id = "${aws_security_group.lb.id}"
+  security_group_id        = "${aws_security_group.service.id}"
+  count                    = "${signum(var.want_nlb)}"
+}
+
+resource "aws_lb" "service" {
+  name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
+  count   = "${var.want_nlb*var.asg_count}"
+  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets)))))}"]
+
+  security_groups = [
+    "${aws_security_group.lb.*.id}",
+  ]
+
+  internal = "${var.public_lb == 0 ? true : false}"
+
+  idle_timeout = 400
+
+  tags {
+    Name      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
+    Env       = "${data.terraform_remote_state.env.env_name}"
+    App       = "${data.terraform_remote_state.app.app_name}"
+    Service   = "${var.service_name}"
+    ManagedBy = "terraform"
+    Color     = "${element(var.asg_name,count.index)}"
+  }
+}
+
+resource "aws_lb_listener" "service" {
+  count             = "${var.want_nlb*var.asg_count}"
+  load_balancer_arn = "${element(aws_lb.service.*.arn,count.index)}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2015-05"
+  certificate_arn   = "${data.terraform_remote_state.env.env_cert}"
+
+  default_action {
+    target_group_arn = "${element(aws_lb_target_group.service.*.arn,count.index)}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_listener_rule" "service" {
+  count        = "${var.want_nlb*var.asg_count}"
+  listener_arn = "${element(aws_lb_listener.service.*.arn,count.index)}"
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = "${element(aws_lb_target_group.service.*.arn,count.index)}"
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["/*"]
+  }
+}
+
+resource "aws_lb_target_group" "service" {
+  name     = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
+  count    = "${var.want_nlb*var.asg_count}"
+  port     = 8888
+  protocol = "HTTP"
+  vpc_id   = "${data.aws_vpc.current.id}"
+}
+
+resource "aws_route53_record" "service" {
+  zone_id = "${data.terraform_remote_state.env.private_zone_id}"
+  name    = "${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}.${data.terraform_remote_state.env.private_zone_name}"
+  type    = "A"
+
+  alias {
+    name                   = "${element(concat(aws_lb.service.*.dns_name),count.index)}"
+    zone_id                = "${element(concat(aws_lb.service.*.zone_id),count.index)}"
+    evaluate_target_health = false
+  }
+
+  count = "${var.asg_count*signum(var.want_nlb)}"
 }
