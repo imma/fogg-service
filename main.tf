@@ -976,7 +976,7 @@ resource "aws_security_group_rule" "lb_to_service" {
 resource "aws_lb" "service" {
   name    = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count   = "${var.want_nlb*var.asg_count}"
-  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.common_subnets,data.terraform_remote_state.env.fake_subnets)))))}"]
+  subnets = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets)))))}"]
 
   security_groups = [
     "${aws_security_group.lb.*.id}",
