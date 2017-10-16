@@ -948,16 +948,6 @@ resource "aws_elasticache_subnet_group" "service" {
   count = "${var.want_elasticache}"
 }
 
-resource "aws_security_group_rule" "lb_to_service" {
-  type                     = "ingress"
-  from_port                = 32768
-  to_port                  = 65535
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.lb.id}"
-  security_group_id        = "${aws_security_group.service.id}"
-  count                    = "${signum(var.want_nlb)}"
-}
-
 resource "aws_lb" "service" {
   name               = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   load_balancer_type = "network"
