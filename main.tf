@@ -972,9 +972,7 @@ resource "aws_lb_listener" "service" {
   count             = "${var.want_nlb*var.asg_count}"
   load_balancer_arn = "${element(aws_lb.service.*.arn,count.index)}"
   port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2015-05"
-  certificate_arn   = "${data.terraform_remote_state.env.env_cert}"
+  protocol          = "TCP"
 
   default_action {
     target_group_arn = "${element(aws_lb_target_group.service.*.arn,count.index)}"
