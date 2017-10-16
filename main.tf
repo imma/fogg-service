@@ -970,7 +970,7 @@ resource "aws_lb" "service" {
 resource "aws_lb_listener" "service" {
   count             = "${var.want_nlb*var.asg_count}"
   load_balancer_arn = "${element(aws_lb.service.*.arn,count.index)}"
-  port              = "443"
+  port              = 443
   protocol          = "TCP"
 
   default_action {
@@ -979,27 +979,11 @@ resource "aws_lb_listener" "service" {
   }
 }
 
-resource "aws_lb_listener_rule" "service" {
-  count        = "${var.want_nlb*var.asg_count}"
-  listener_arn = "${element(aws_lb_listener.service.*.arn,count.index)}"
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = "${element(aws_lb_target_group.service.*.arn,count.index)}"
-  }
-
-  condition {
-    field  = "path-pattern"
-    values = ["/*"]
-  }
-}
-
 resource "aws_lb_target_group" "service" {
   name     = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-${element(var.asg_name,count.index)}"
   count    = "${var.want_nlb*var.asg_count}"
-  port     = 8888
-  protocol = "HTTP"
+  port     = 443
+  protocol = "TCP"
   vpc_id   = "${data.aws_vpc.current.id}"
 }
 
