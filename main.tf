@@ -948,21 +948,6 @@ resource "aws_elasticache_subnet_group" "service" {
   count = "${var.want_elasticache}"
 }
 
-resource "aws_security_group" "lb" {
-  name        = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-lb"
-  description = "LB ${data.terraform_remote_state.app.app_name}-${var.service_name}"
-  vpc_id      = "${data.aws_vpc.current.id}"
-  count       = "${signum(var.want_nlb)}"
-
-  tags {
-    "Name"      = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}-lb"
-    "Env"       = "${data.terraform_remote_state.env.env_name}"
-    "App"       = "${data.terraform_remote_state.app.app_name}-lb"
-    "Service"   = "${var.service_name}"
-    "ManagedBy" = "terraform"
-  }
-}
-
 resource "aws_security_group_rule" "lb_to_service" {
   type                     = "ingress"
   from_port                = 32768
@@ -978,10 +963,6 @@ resource "aws_lb" "service" {
   load_balancer_type = "network"
   count              = "${var.want_nlb*var.asg_count}"
   subnets            = ["${split(" ",var.public_lb ? join(" ",data.terraform_remote_state.env.public_subnets) : join(" ",compact(concat(aws_subnet.service.*.id,aws_subnet.service_v6.*.id,formatlist(var.want_subnets ? "%[3]s" : (var.public_network ? "%[1]s" : "%[2]s"),data.terraform_remote_state.env.public_subnets,data.terraform_remote_state.env.private_subnets,data.terraform_remote_state.env.fake_subnets)))))}"]
-
-  security_groups = [
-    "${aws_security_group.lb.*.id}",
-  ]
 
   internal = "${var.public_lb == 0 ? true : false}"
 
