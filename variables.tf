@@ -30,6 +30,10 @@ variable "want_nlb" {
   default = "0"
 }
 
+variable "want_alb" {
+  default = "0"
+}
+
 variable "want_efs" {
   default = "0"
 }
