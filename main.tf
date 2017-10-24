@@ -684,7 +684,7 @@ resource "aws_autoscaling_notification" "service" {
 }
 
 module "efs" {
-  source   = "git@github.com:imma/fogg-efs"
+  source   = "module/imma/fogg-efs"
   efs_name = "${data.terraform_remote_state.env.env_name}-${data.terraform_remote_state.app.app_name}-${var.service_name}"
   vpc_id   = "${data.terraform_remote_state.env.vpc_id}"
   env_name = "${data.terraform_remote_state.env.env_name}"
@@ -893,7 +893,7 @@ resource "aws_lambda_function" "service" {
 }
 
 module "fn_service" {
-  source           = "git@github.com:imma/fogg-api-gateway//module/fn"
+  source           = "module/imma/fogg-api-gateway//module/fn"
   function_name    = "${aws_lambda_function.service.function_name}"
   function_arn     = "${aws_lambda_function.service.arn}"
   function_version = "${aws_lambda_function.service.version}"
@@ -902,7 +902,7 @@ module "fn_service" {
 }
 
 module "resource_service" {
-  source = "git@github.com:imma/fogg-api-gateway//module/resource"
+  source = "module/imma/fogg-api-gateway//module/resource"
 
   http_method = "POST"
   api_name    = "${var.service_name}"
